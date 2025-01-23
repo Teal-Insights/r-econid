@@ -12,6 +12,7 @@
 # nolint start
 #' @source \url{https://github.com/t-emery/sais-susfin_data/blob/main/datasets/imf_wb_country_groups.csv}
 # nolint end
+#' @export
 "country_aggregates"
 
 #' Country Data with ISO Codes and World Bank Information
@@ -36,6 +37,7 @@
 # nolint start
 #' @source \url{https://github.com/t-emery/wbhelpr/blob/master/data-raw/wb_countrycode.csv}
 # nolint end
+#' @export
 "country_codes"
 
 #' World Bank Geographic Entities
@@ -51,6 +53,7 @@
 #'   \item{geography_type}{Type of the geography: "Country" or "Region"}
 #' }
 #' @source World Bank World Development Indicators API
+#' @export
 "geographies"
 
 #' World Bank Counterparts
@@ -69,6 +72,7 @@
 #'         "Country", "Global MDBs", "Global IFIs")}
 #' }
 #' @source World Bank International Debt Statistics API
+#' @export
 "counterparts"
 
 #' Economy Patterns
@@ -77,9 +81,24 @@
 #'
 #' @format A data frame with the following columns:
 #' \describe{
-#'   \item{pattern}{Regular expression pattern for matching economy names}
-#'   \item{iso3}{ISO 3166-1 alpha-3 code}
-#'   \item{iso2}{ISO 3166-1 alpha-2 code}
+#'   \item{economy_name}{Economy name}
+#'   \item{economy_regex}{Regular expression pattern for matching economy names}
+#'   \item{iso2c}{ISO 3166-1 alpha-2 code}
+#'   \item{iso3c}{ISO 3166-1 alpha-3 code}
 #' }
 #' @source Data manually prepared by Teal L. Emery
+#' @export
 "economy_patterns"
+
+#' Economy Patterns Test Cases
+#'
+#' A dataset containing test cases for the economy patterns.
+#'
+#' @format A data frame with the following columns:
+#' \describe{
+#'   \item{economy_name}{Economy name}
+#'   \item{variant_names}{List of variant names}
+#' }
+#' @source DeepSeek-V3 API
+#' @keywords internal
+"test_cases"

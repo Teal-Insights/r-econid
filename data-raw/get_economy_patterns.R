@@ -765,8 +765,7 @@ economy_patterns <- tibble::tribble(
   ), "MEX", "MX",
 
   "Micronesia", paste0(
-    "fed.*micronesia|",
-    "micronesia.*fed|", # Federated States of Micronesia variations
+    "micronesia|",
     "^FSM$|^FM$"
   ), "FSM", "FM",
 
