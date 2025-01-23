@@ -70,3 +70,16 @@
 #' }
 #' @source World Bank International Debt Statistics API
 "counterparts"
+
+#' Economy Patterns
+#'
+#' A dataset containing patterns for matching economy names.
+#'
+#' @format A data frame with the following columns:
+#' \describe{
+#'   \item{pattern}{Regular expression pattern for matching economy names}
+#'   \item{iso3}{ISO 3166-1 alpha-3 code}
+#'   \item{iso2}{ISO 3166-1 alpha-2 code}
+#' }
+#' @source Data manually prepared by Teal L. Emery
+"economy_patterns"
