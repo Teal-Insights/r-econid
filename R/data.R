@@ -12,7 +12,6 @@
 # nolint start
 #' @source \url{https://github.com/t-emery/sais-susfin_data/blob/main/datasets/imf_wb_country_groups.csv}
 # nolint end
-#' @export
 "country_aggregates"
 
 #' Country Data with ISO Codes and World Bank Information
@@ -37,7 +36,6 @@
 # nolint start
 #' @source \url{https://github.com/t-emery/wbhelpr/blob/master/data-raw/wb_countrycode.csv}
 # nolint end
-#' @export
 "country_codes"
 
 #' World Bank Geographic Entities
@@ -53,7 +51,6 @@
 #'   \item{geography_type}{Type of the geography: "Country" or "Region"}
 #' }
 #' @source World Bank World Development Indicators API
-#' @export
 "geographies"
 
 #' World Bank Counterparts
@@ -72,7 +69,6 @@
 #'         "Country", "Global MDBs", "Global IFIs")}
 #' }
 #' @source World Bank International Debt Statistics API
-#' @export
 "counterparts"
 
 #' Economy Patterns
@@ -87,7 +83,6 @@
 #'   \item{iso3c}{ISO 3166-1 alpha-3 code}
 #' }
 #' @source Data manually prepared by Teal L. Emery
-#' @export
 "economy_patterns"
 
 #' Economy Patterns Test Cases

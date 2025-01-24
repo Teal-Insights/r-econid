@@ -9,7 +9,7 @@
 #' @param name_col Name of the column containing economy names
 #' @param code_col Optional name of the column containing economy codes
 #' @param output_cols Character vector specifying desired output columns.
-#'   Options are "name", "id", "type", "iso3c", "iso2c"
+#'   Options are "economy_name", "economy_type", "iso3c", "iso2c"
 #' @param custom_economies Optional list of custom economy definitions
 #' @param custom_names Optional named vector or list for direct name mappings
 #' @param show_aggregates Logical; whether to report detected aggregate
@@ -28,20 +28,23 @@ standardize_economy <- function(
   data,
   name_col,
   code_col = NULL,
-  output_cols = c("name", "id", "type"),
+  output_cols = c("economy_name", "economy_type"),
   custom_economies = NULL,
   custom_names = NULL,
   show_aggregates = TRUE,
   warn_ambiguous = TRUE
 ) {
-  # Input validation
-  name_col_name <- rlang::as_name(rlang::enquo(name_col))
+  # Allow user to use either quoted or unquoted column names
+  name_col_name <- rlang::as_name(
+    rlang::enquo(name_col)
+  )
   code_col_name <- if (!is.null(rlang::enquo(code_col))) {
     rlang::as_name(rlang::enquo(code_col))
   } else {
     NULL
   }
 
+  # Input validation
   if (!is.data.frame(data)) {
     cli::cli_abort("Input {.var data} must be a data frame or tibble.")
   }
