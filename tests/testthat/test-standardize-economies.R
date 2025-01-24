@@ -78,26 +78,25 @@ test_that("try_iso_match handles ISO code matching", {
 
 test_that("try_regex_match handles pattern matching", {
   test_patterns <- tibble::tribble(
-    ~economy_name,    ~economy_regex,      ~iso3c, ~iso2c,
-    "United States",  "united.?states",    "USA",  "US",
-    "United Kingdom", "united.?kingdom",   "GBR",  "GB",
-    "US",            "^us$",              "USA",  "US"
+    ~economy_name,           ~economy_regex,         ~iso3c, ~iso2c,
+    "Congo, Dem. Rep.",     "^(democratic.?republic.?of.?)?congo|drc|zaire",  "COD",  "CD",
+    "Congo, Rep.",          "^(republic.?of.?)?congo$",     "COG",  "CG"
   )
-  
-  # Test basic match
-  us_match <- try_regex_match("United States", test_patterns, warn_ambiguous = TRUE)
-  expect_equal(us_match$name, "United States")
-  expect_equal(us_match$iso3c, "USA")
+
+  # Test basic match with unambiguous input
+  cod_match <- try_regex_match("Democratic Republic of Congo", test_patterns, warn_ambiguous = TRUE)
+  expect_equal(cod_match$name, "Congo, Dem. Rep.")
+  expect_equal(cod_match$iso3c, "COD")
   
   # Test ambiguous match warning
   expect_warning(
-    try_regex_match("US", test_patterns, warn_ambiguous = TRUE),
+    try_regex_match("Congo", test_patterns, warn_ambiguous = TRUE),
     "Ambiguous match"
   )
   
   # Test no warning when warn_ambiguous = FALSE
   expect_no_warning(
-    try_regex_match("US", test_patterns, warn_ambiguous = FALSE)
+    try_regex_match("Congo", test_patterns, warn_ambiguous = FALSE)
   )
 })
 
@@ -125,10 +124,13 @@ test_that("basic country standardization works", {
     "NotACountry",    NA
   )
   
-  result <- standardize_economy(test_df, name_col = economy, code_col = code)
+  expect_message(
+    result <- standardize_economy(test_df, name_col = economy, code_col = code),
+    "classified as aggregates"
+  )
   
-  expect_equal(result$economy_name, c("United States", "United States", "United States", "European Union", "NotACountry"))
-  expect_equal(result$economy_id, c("USA", "USA", "USA", "EUU", NA_character_))
+  expect_equal(result$economy_name, c("United States", "United States", "United States", "EU", "NotACountry"))
+  expect_equal(result$economy_id, c("USA", "USA", "USA", NA_character_, NA_character_))
   expect_equal(result$economy_type, c(rep("Country/Economy", 3), "Aggregate", "Aggregate"))
 })
 
