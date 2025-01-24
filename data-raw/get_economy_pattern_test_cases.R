@@ -170,5 +170,51 @@ test_cases$variant_names[[which(test_cases$economy_name == "Ethiopia")]] <-
     test_cases$variant_names[[which(test_cases$economy_name == "Ethiopia")]] != "Derg"
   ]
 
+test_cases$variant_names[[which(test_cases$economy_name == "Germany")]] <- 
+  test_cases$variant_names[[which(test_cases$economy_name == "Germany")]][
+    !test_cases$variant_names[[which(test_cases$economy_name == "Germany")]] %in% c(
+      "East Germany",
+      "German Democratic Republic",
+      "Third Reich",
+      "Weimar Republic",
+      "German Empire"
+    )
+  ]
+
+test_cases$variant_names[[which(test_cases$economy_name == "Greece")]] <- 
+  test_cases$variant_names[[which(test_cases$economy_name == "Greece")]][
+    test_cases$variant_names[[which(test_cases$economy_name == "Greece")]] != "Military Junta"
+  ]
+
+test_cases$variant_names[[which(test_cases$economy_name == "Hungary")]] <- 
+  test_cases$variant_names[[which(test_cases$economy_name == "Hungary")]][
+    !test_cases$variant_names[[which(test_cases$economy_name == "Hungary")]] %in% c(
+      "Austria-Hungary",
+      "Hungarian People's Republic",
+      "Hungarian Soviet Republic",
+      "Hungarian Democratic Republic"
+    )
+  ]
+
+test_cases$variant_names[[which(test_cases$economy_name == "Indonesia")]] <- 
+  test_cases$variant_names[[which(test_cases$economy_name == "Indonesia")]][
+    !test_cases$variant_names[[which(test_cases$economy_name == "Indonesia")]] %in% c(
+      "Dutch East Indies"
+    )
+  ]
+
+test_cases$variant_names[[which(test_cases$economy_name == "Iran")]] <- 
+  test_cases$variant_names[[which(test_cases$economy_name == "Iran")]][
+    !test_cases$variant_names[[which(test_cases$economy_name == "Iran")]] %in% c(
+      "Pahlavi dynasty"
+    )
+  ]
+
+test_cases$variant_names[[which(test_cases$economy_name == "Ireland")]] <- 
+  test_cases$variant_names[[which(test_cases$economy_name == "Ireland")]][
+    !test_cases$variant_names[[which(test_cases$economy_name == "Ireland")]] %in% c(
+      "Irish Free State"
+    )
+  ]
 
 usethis::use_data(test_cases, overwrite = TRUE)

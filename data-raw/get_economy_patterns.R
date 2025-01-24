@@ -485,14 +485,14 @@ economy_patterns <- tibble::tribble(
   ), "GIB", "GI",
 
   "Greece", paste0(
-    "greece|",
-    "hellenic|",
-    "hellas|", # alternative names
+    "gree(ce|k)|",
+    "hell(as|enic)|", # alternative names
     "^GRC$|^GR$"
   ), "GRC", "GR",
 
   "Greenland", paste0(
     "greenland|",
+    "kalaallit|", # Greenlandic name
     "^GRL$|^GL$"
   ), "GRL", "GL",
 
@@ -536,6 +536,7 @@ economy_patterns <- tibble::tribble(
   "Guyana", paste0(
     "^guyana|",
     "british.?gu(y|i)ana|", # historical
+    "operative.*gu(y|i)ana|", # official name
     "^GUY$|^GY$"
   ), "GUY", "GY",
 
@@ -571,6 +572,8 @@ economy_patterns <- tibble::tribble(
 
   "India", paste0(
     "india(?!.*ocea)|", # exclude Indian Ocean Territory
+    "hindustan|", # historical
+    "bharat|", # Hindi name
     "^IND$|^IN$"
   ), "IND", "IN",
 
@@ -593,11 +596,14 @@ economy_patterns <- tibble::tribble(
 
   "Ireland", paste0(
     "^(?!.*north).*\\bireland|", # exclude Northern Ireland
+    "Éire|", # Irish name
     "^IRL$|^IE$"
   ), "IRL", "IE",
 
   "Isle of Man", paste0(
     "^(?=.*isle).*\\bman|", # matches "Isle of Man" variations
+    "^mann$|",
+    "ellan vannin|", # Manx name
     "^IMN$|^IM$"
   ), "IMN", "IM",
 
