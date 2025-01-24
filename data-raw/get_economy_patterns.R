@@ -42,12 +42,12 @@ economy_patterns <- tibble::tribble(
   ), "ATA", "AQ",
 
   "Antigua & Barbuda", paste0(
-    "antigua|", # matching on first part is sufficient
+    "antigua|barbuda|",
     "^ATG$|^AG$"
   ), "ATG", "AG",
 
   "Argentina", paste0(
-    "argentin|", # matches argentina/argentine
+    "argentin|de la plata|", # matches argentina/argentine
     "^ARG$|^AR$"
   ), "ARG", "AR",
 
@@ -100,6 +100,7 @@ economy_patterns <- tibble::tribble(
 
   "Belarus", paste0(
     "belarus|",
+    "belorus|",
     "byelo|", # historical: Byelorussia
     "^BLR$|^BY$"
   ), "BLR", "BY",
@@ -128,6 +129,7 @@ economy_patterns <- tibble::tribble(
 
   "Bhutan", paste0(
     "bhutan|",
+    "druk|", # Name in Dzongkha language
     "^BTN$|^BT$"
   ), "BTN", "BT",
 
@@ -228,7 +230,8 @@ economy_patterns <- tibble::tribble(
   ), "CYM", "KY",
 
   "Central African Republic", paste0(
-    "\\bcentral.african.rep|",
+    "\\bcentral.african.(rep|emp)|",
+    "ubangu?i-(c|s)hari|", # historical: Ubangi-Chari or Ou
     "^CAF$|^CF$"
   ), "CAF", "CF",
 
@@ -243,8 +246,9 @@ economy_patterns <- tibble::tribble(
   ), "CHL", "CL",
 
   "China", paste0(
-    "^(?!.*\\bmac)(?!.*\\bhong)(?!.*\\btai)(?!.*\\brep).*china|", # exclude Macau, Hong Kong, Taiwan, Republic of
-    "^(?=.*peo)(?=.*rep).*china|", # match People's Republic of China
+    # exclude Macau, Hong Kong, Taiwan, Republic of China
+    "^(?!.*\\bmac)(?!.*\\bhong)(?!.*\\btai)(?!rep).*china|",
+    "prc|",
     "^CHN$|^CN$"
   ), "CHN", "CN",
 
@@ -316,7 +320,7 @@ economy_patterns <- tibble::tribble(
   ), "CUW", "CW",
 
   "Cyprus", paste0(
-    "cyprus|",
+    "cyprus|cypriot|",
     "^CYP$|^CY$"
   ), "CYP", "CY",
 
@@ -341,6 +345,8 @@ economy_patterns <- tibble::tribble(
 
   "Djibouti", paste0(
     "djibouti|",
+    "the afars|",
+    "somaliland|",
     "^DJI$|^DJ$"
   ), "DJI", "DJ",
 
@@ -351,6 +357,7 @@ economy_patterns <- tibble::tribble(
 
   "Dominican Republic", paste0(
     "dominican.rep|",
+    "rep.*dominicana|",
     "^DOM$|^DO$"
   ), "DOM", "DO",
 
@@ -383,6 +390,7 @@ economy_patterns <- tibble::tribble(
 
   "Estonia", paste0(
     "estonia|",
+    "eesti\\svabariik|",
     "^EST$|^EE$"
   ), "EST", "EE",
 
@@ -405,8 +413,7 @@ economy_patterns <- tibble::tribble(
   ), "FLK", "FK",
 
   "Faroe Islands", paste0(
-    "faroe|",
-    "faeroe|", # alternative spelling
+    "f(a|ae|ø|æ)r(o|Ø)(e|y)|",
     "^FRO$|^FO$"
   ), "FRO", "FO",
 
@@ -422,13 +429,14 @@ economy_patterns <- tibble::tribble(
 
   "France", paste0(
     "^(?!.*\\bdep)(?!.*martinique).*france|", # exclude French departments and territories
-    "french.?republic|",
+    "french.*(republic|state)|",
     "\\bgaul|", # historical
     "^FRA$|^FR$"
   ), "FRA", "FR",
 
   "French Guiana", paste0(
     "french.?gu(y|i)ana|", # handles spelling variations
+    "^guyane$|",
     "^GUF$|^GF$"
   ), "GUF", "GF",
 
@@ -455,6 +463,7 @@ economy_patterns <- tibble::tribble(
 
   "Georgia", paste0(
     "^(?!.*south).*georgia|", # exclude South Georgia
+    "sakartvelo|",
     "^GEO$|^GE$"
   ), "GEO", "GE",
 
