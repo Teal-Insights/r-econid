@@ -1,3 +1,26 @@
+# Design notes:
+#
+# Instead of a custom names vector the same length as the input data, we should
+# allow users to define a dict-like object with any subset of the input data
+# columns as the keys, and the values being the new names to map to. The rest
+# of the input data will be standardized as normal.
+#
+# When allowing users to extend the economy_patterns with custom patterns, we
+# should let them do it once at the top of their script rather than as a
+# argument. Also may want to allow custom regex rather than always construct
+# it programmatically.
+#
+# The order of operations is important for custom names and custom economies.
+# Custom names is mapping input names to output names, whereas custom economies
+# is mapping the standardized output name to a standardized identifier and
+# list of aliases. If we apply cutom names first, then the aliases list has to
+# include the standardized output name, and the aliases are irrelevant.
+# (Assuming we have supplied a custom name for the custom economy. Do we have a
+# test case where that's not the case?) Quite possibly having custom names
+# be separate from custom economies is unnecessarily complicated, especially
+# if custom economies takes an alias list.
+
+
 #' Standardize Economy Names and Codes
 #'
 #' @description
@@ -9,9 +32,10 @@
 #' @param name_col Name of the column containing economy names
 #' @param code_col Optional name of the column containing economy codes
 #' @param output_cols Character vector specifying desired output columns.
-#'   Options are "economy_name", "economy_type", "iso3c", "iso2c"
+#'   Options are "economy_name", "economy_id","economy_type", "iso3c", "iso2c"
 #' @param custom_economies Optional list of custom economy definitions
-#' @param custom_names Optional named vector or list for direct name mappings
+#' @param custom_names Optional named vector or list the same length as the
+#'   number of rows in the input data, for direct mapping to name_col
 #' @param show_aggregates Logical; whether to report detected aggregate
 #'   economies
 #' @param warn_ambiguous Logical; whether to warn about ambiguous matches
@@ -28,20 +52,21 @@ standardize_economy <- function(
   data,
   name_col,
   code_col = NULL,
-  output_cols = c("economy_name", "economy_type"),
+  output_cols = c("economy_name", "economy_id", "economy_type"),
   custom_economies = NULL,
   custom_names = NULL,
   show_aggregates = TRUE,
   warn_ambiguous = TRUE
 ) {
   # Allow user to use either quoted or unquoted column names
-  name_col_name <- rlang::as_name(
-    rlang::enquo(name_col)
-  )
-  code_col_name <- if (!is.null(rlang::enquo(code_col))) {
-    rlang::as_name(rlang::enquo(code_col))
+  name_col_expr <- rlang::enquo(name_col)
+  name_col_name <- rlang::as_name(name_col_expr)
+  
+  code_col_expr <- rlang::enquo(code_col)
+  if (!rlang::quo_is_missing(code_col_expr) && !rlang::quo_is_null(code_col_expr)) {
+    code_col_name <- rlang::as_name(code_col_expr)
   } else {
-    NULL
+    code_col_name <- NULL
   }
 
   # Input validation
@@ -75,9 +100,9 @@ standardize_economy <- function(
 
   # Map output column names
   col_mapping <- c(
-    name = "economy_name",
-    id = "economy_id",
-    type = "economy_type",
+    economy_name = "economy_name",
+    economy_type = "economy_type",
+    economy_id = "economy_id",
     iso3c = "iso3c",
     iso2c = "iso2c"
   )
@@ -117,11 +142,15 @@ standardize_economy <- function(
 #'
 #' @description
 #' Validates and processes custom economy definitions into a standardized format
-#' for use in economy name matching.
+#' for use in economy name matching. Custom economies can be defined with a
+#' simple ID or with a list containing an ID and aliases.
 #'
-#' @param custom_economies List of custom economy definitions
+#' @param custom_economies A list of custom economy definitions. Each element
+#'   can be either a character string representing the economy's ID, or a list
+#'   with elements `id` (required) and `aliases` (optional).
 #'
-#' @return A tibble containing processed economy patterns
+#' @return A tibble containing processed economy patterns, with columns
+#'   `economy_name`, `economy_regex`, `iso3c`, and `iso2c`.
 #'
 #' @keywords internal
 process_custom_economies <- function(custom_economies) {
@@ -147,17 +176,13 @@ process_custom_economies <- function(custom_economies) {
         cli::cli_abort("Each custom economy must have an 'id' specified")
       }
 
-      # Create regex pattern including aliases if provided
-      pattern <- if (!is.null(value$aliases)) {
-        aliases <- paste(c(name, value$aliases), collapse = "|")
-        create_economy_regex(aliases)
-      } else {
-        create_economy_regex(name)
-      }
-
+      # Combine all identifiers and wrap in word boundaries
+      aliases <- c(name, unlist(value$aliases))
+      pattern <- paste0("^(", paste(aliases, collapse="|"), ")$")
+      
       tibble::tibble(
         economy_name = name,
-        economy_regex = pattern,
+        economy_regex = create_economy_regex(pattern),
         iso3c = id,
         iso2c = NA_character_
       )
@@ -175,9 +200,12 @@ process_custom_economies <- function(custom_economies) {
 #' Validates custom name mappings to ensure they meet required format
 #' specifications.
 #'
-#' @param custom_names Named vector or list of custom name mappings
+#' @param custom_names A named vector or list of custom name mappings.
+#'   The names of the vector or list are the original names to be replaced,
+#'   and the values are the replacement names.
 #'
-#' @return Validated character vector of custom names
+#' @return A validated character vector of custom names, with names
+#'   corresponding to the original names to be replaced.
 #'
 #' @keywords internal
 validate_custom_names <- function(custom_names) {
@@ -205,12 +233,14 @@ validate_custom_names <- function(custom_names) {
 #' Create Economy Name Regex Pattern
 #'
 #' @description
-#' Creates a regex pattern from an economy name following standardized rules
-#' for flexible matching.
+#' Creates a regular expression pattern from an economy name, following
+#' standardized rules for flexible matching. This function converts the input
+#' name to lowercase, escapes special regex characters, and replaces spaces
+#' with a flexible whitespace pattern (`.?`).
 #'
-#' @param name Character string containing economy name
+#' @param name Character string containing the economy name.
 #'
-#' @return Character string containing regex pattern
+#' @return Character string containing the regex pattern.
 #'
 #' @keywords internal
 create_economy_regex <- function(name) {
@@ -262,7 +292,9 @@ standardize_economies_impl <- function(
 
   # Apply custom names first if provided
   if (!is.null(custom_names)) {
-    names <- standardize_with_custom_names(names, custom_names)
+    transformed_names <- standardize_with_custom_names(names, custom_names)
+  } else {
+    transformed_names <- names
   }
 
   # Combine standard and custom patterns
@@ -275,19 +307,28 @@ standardize_economies_impl <- function(
   # Process each name
   for (i in seq_len(n)) {
     current_name <- names[i]
-    current_code <- if (!is.null(codes)) codes[i] else NA_character_
+    current_transformed_name <- transformed_names[i]
+    current_code <- if (!is.null(codes)) {
+      codes[i]
+    } else {
+      patterns$iso3c[patterns$economy_name == current_name]
+    }
+
+    if (current_name == "CustomEconomy") {
+      print(current_code)
+    }
 
     # Try to match the current name
     match_result <- match_economy(
-      name = current_name,
+      name = current_transformed_name,
       code = current_code,
       patterns = patterns,
       warn_ambiguous = warn_ambiguous
     )
 
-    results$economy_name[i] <- match_result$name
-    results$economy_id[i] <- match_result$id
-    results$economy_type[i] <- match_result$type
+    results$economy_name[i] <- match_result$economy_name
+    results$economy_id[i] <- match_result$economy_id
+    results$economy_type[i] <- match_result$economy_type
     results$iso3c[i] <- match_result$iso3c
     results$iso2c[i] <- match_result$iso2c
   }
@@ -315,57 +356,22 @@ standardize_economies_impl <- function(
 #'
 #' @keywords internal
 match_economy <- function(name, code, patterns, warn_ambiguous = TRUE) {
-  # Initialize result
-  result <- list(
-    name = name,  # Default to original name
-    id = code,    # Default to provided code
-    type = "Aggregate",  # Default type
-    iso3c = NA_character_,
-    iso2c = NA_character_
-  )
-
-  if (is.na(name)) {
-    return(result)
-  }
-
-  # Try exact ISO3 match first
-  iso_match <- try_iso_match(name, patterns)
-  if (!is.null(iso_match)) {
-    return(iso_match)
-  }
-
   # Try regex patterns
   regex_match <- try_regex_match(name, patterns, warn_ambiguous)
   if (!is.null(regex_match)) {
     return(regex_match)
   }
+  
+  # Initialize result
+  result <- list(
+    economy_name = name,  # Default to original name
+    economy_id = code,    # Default to provided code
+    economy_type = "Aggregate",  # Default type
+    iso3c = NA_character_,
+    iso2c = NA_character_
+  )
 
   result
-}
-
-#' Try ISO Code Match
-#'
-#' @description
-#' Attempts to match an economy name directly against ISO codes.
-#'
-#' @param name Character string of economy name
-#' @param patterns Tibble of matching patterns
-#'
-#' @return List containing matched economy information or NULL
-#'
-#' @keywords internal
-try_iso_match <- function(name, patterns) {
-  iso3_match <- match(toupper(name), toupper(patterns$iso3c))
-  if (!is.na(iso3_match)) {
-    return(list(
-      name = patterns$economy_name[iso3_match],
-      id = patterns$iso3c[iso3_match],
-      type = "Country/Economy",
-      iso3c = patterns$iso3c[iso3_match],
-      iso2c = patterns$iso2c[iso3_match]
-    ))
-  }
-  NULL
 }
 
 #' Try Regex Pattern Match
@@ -406,9 +412,9 @@ try_regex_match <- function(name, patterns, warn_ambiguous) {
   if (any(matches)) {
     match_idx <- which(matches)[1]
     return(list(
-      name = patterns$economy_name[match_idx],
-      id = patterns$iso3c[match_idx],
-      type = "Country/Economy",
+      economy_name = patterns$economy_name[match_idx],
+      economy_id = patterns$iso3c[match_idx],
+      economy_type = "Country/Economy",
       iso3c = patterns$iso3c[match_idx],
       iso2c = patterns$iso2c[match_idx]
     ))

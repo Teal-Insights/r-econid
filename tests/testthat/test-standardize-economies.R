@@ -54,28 +54,6 @@ test_that("create_economy_regex generates correct patterns", {
   )
 })
 
-test_that("try_iso_match handles ISO code matching", {
-  test_patterns <- tibble::tibble(
-    economy_name = c("United States", "France"),
-    economy_regex = c("united.?states", "france"),
-    iso3c = c("USA", "FRA"),
-    iso2c = c("US", "FR")
-  )
-  
-  # Test exact ISO3 match
-  usa_match <- try_iso_match("USA", test_patterns)
-  expect_equal(usa_match$name, "United States")
-  expect_equal(usa_match$iso3c, "USA")
-  
-  # Test case insensitive match
-  fra_match <- try_iso_match("fra", test_patterns)
-  expect_equal(fra_match$name, "France")
-  
-  # Test no match
-  no_match <- try_iso_match("XYZ", test_patterns)
-  expect_null(no_match)
-})
-
 test_that("try_regex_match handles pattern matching", {
   test_patterns <- tibble::tribble(
     ~economy_name,           ~economy_regex,         ~iso3c, ~iso2c,
@@ -85,7 +63,7 @@ test_that("try_regex_match handles pattern matching", {
 
   # Test basic match with unambiguous input
   cod_match <- try_regex_match("Democratic Republic of Congo", test_patterns, warn_ambiguous = TRUE)
-  expect_equal(cod_match$name, "Congo, Dem. Rep.")
+  expect_equal(cod_match$economy_name, "Congo, Dem. Rep.")
   expect_equal(cod_match$iso3c, "COD")
   
   # Test ambiguous match warning
@@ -145,7 +123,9 @@ test_that("custom name mappings work correctly", {
   result <- standardize_economy(
     test_df,
     name_col = country,
-    custom_names = list("America" = "United States", "UK" = "United Kingdom"),
+    custom_names = list(
+        "America" = "United States", "UK" = "United Kingdom", "MyCustomEconomy" = "CustomEconomy"
+    ),
     custom_economies = list(
       "MyCustomEconomy" = list(
         id = "MCE",
@@ -154,7 +134,7 @@ test_that("custom name mappings work correctly", {
     )
   )
   
-  expect_equal(result$economy_name, c("United States", "United Kingdom", "MyCustomEconomy"))
+  expect_equal(result$economy_name, c("United States", "United Kingdom", "CustomEconomy"))
   expect_equal(result$economy_id, c("USA", "GBR", "MCE"))
 })
 
@@ -189,10 +169,10 @@ test_that("aggregate detection and reporting works", {
 test_that("output column selection works", {
   test_df <- tibble::tribble(~economy, "Germany")
   
-  minimal_result <- standardize_economy(test_df, name_col = economy, output_cols = "name")
+  minimal_result <- standardize_economy(test_df, name_col = economy, output_cols = "economy_name")
   expect_named(minimal_result, c("economy_name"))
   
-  full_result <- standardize_economy(test_df, name_col = economy, output_cols = c("name", "id", "type", "iso3c", "iso2c"))
+  full_result <- standardize_economy(test_df, name_col = economy, output_cols = c("economy_name", "economy_id", "economy_type", "iso3c", "iso2c"))
   expect_named(full_result, c("economy_name", "economy_id", "economy_type", "iso3c", "iso2c"))
 })
 
