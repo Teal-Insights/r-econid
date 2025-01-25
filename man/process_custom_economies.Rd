@@ -7,13 +7,17 @@
 process_custom_economies(custom_economies)
 }
 \arguments{
-\item{custom_economies}{List of custom economy definitions}
+\item{custom_economies}{A list of custom economy definitions. Each element
+can be either a character string representing the economy's ID, or a list
+with elements \code{id} (required) and \code{aliases} (optional).}
 }
 \value{
-A tibble containing processed economy patterns
+A tibble containing processed economy patterns, with columns
+\code{economy_name}, \code{economy_regex}, \code{iso3c}, and \code{iso2c}.
 }
 \description{
 Validates and processes custom economy definitions into a standardized format
-for use in economy name matching.
+for use in economy name matching. Custom economies can be defined with a
+simple ID or with a list containing an ID and aliases.
 }
 \keyword{internal}

@@ -62,7 +62,7 @@ economy_patterns <- tibble::tribble(
   ), "ABW", "AW",
 
   "Australia", paste0(
-    "australia(?!.*new.?zealand)|", # negative lookahead to avoid matching "Australia New Zealand"
+    "australia(?!.*new.?zealand)|", # avoid matching "Australia New Zealand"
     "^AUS$|^AU$"
   ), "AUS", "AU",
 
@@ -276,7 +276,7 @@ economy_patterns <- tibble::tribble(
 
   "Congo - Brazzaville", paste0(
     "^(?!.*\\bd.?m)(?!.*\\bd[\\.]?r)(?!.*kinshasa)(?!.*zaire)",
-    "(?!.*belg)(?!.*l.opoldville)(?!.*free).*\\bcongo|", # exclude Democratic Republic of Congo references
+    "(?!.*belg)(?!.*l.opoldville)(?!.*free).*\\bcongo|", # exclude DRC refs.
     "^COG$|^CG$"
   ), "COG", "CG",
 
@@ -315,7 +315,7 @@ economy_patterns <- tibble::tribble(
   ), "CUB", "CU",
 
   "Curaçao", paste0(
-    "^(?!.*bonaire).*\\bcura(c|ç)ao|", # handles both c and ç, excludes Bonaire mentions
+    "^(?!.*bonaire).*\\bcura(c|ç)ao|", # excludes Bonaire mentions
     "^CUW$|^CW$"
   ), "CUW", "CW",
 
@@ -428,7 +428,7 @@ economy_patterns <- tibble::tribble(
   ), "FIN", "FI",
 
   "France", paste0(
-    "^(?!.*\\bdep)(?!.*martinique).*france|", # exclude French departments and territories
+    "^(?!.*\\bdep)(?!.*martinique).*france|", # exclude French depts. and terr.
     "french.*(republic|state)|",
     "\\bgaul|", # historical
     "^FRA$|^FR$"
@@ -1376,5 +1376,5 @@ economy_patterns <- tibble::tribble(
 
 usethis::use_data(
   economy_patterns,
-  overwrite = TRUE, internal = FALSE
+  overwrite = TRUE
 )

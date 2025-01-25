@@ -1,5 +1,7 @@
 dotenv::load_dot_env()
 
+system_patterns <- economy_patterns
+
 parse_deepseek_response <- function(response) {
   # Remove "```json" and "```"
   clean_text <- gsub("```\\s*json\\s*\\{", "{", response)
@@ -94,7 +96,7 @@ existing_variants <- test_cases |>
 # test_cases generation with option to update all or just missing
 get_test_cases <- function(update_all = FALSE) {
   purrr::pmap_dfr(
-    economy_patterns,
+    system_patterns,
     function(economy_name, economy_regex, iso3c, iso2c) {
       # Check if we already have variants for this economy
       if (!update_all && economy_name %in% existing_variants$economy_name) {
@@ -106,7 +108,7 @@ get_test_cases <- function(update_all = FALSE) {
           variant_names = existing_row$variant_names
         ))
       }
-      
+
       # Make API request for new economies or when update_all is TRUE
       variant_names <- get_variant_names(economy_name, iso3c, iso2c)
       tibble::tibble(
@@ -217,4 +219,4 @@ test_cases$variant_names[[which(test_cases$economy_name == "Ireland")]] <-
     )
   ]
 
-usethis::use_data(test_cases, overwrite = TRUE)
+usethis::use_data(test_cases, overwrite = TRUE, internal = TRUE)

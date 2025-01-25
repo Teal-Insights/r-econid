@@ -7,13 +7,15 @@
 create_economy_regex(name)
 }
 \arguments{
-\item{name}{Character string containing economy name}
+\item{name}{Character string containing the economy name.}
 }
 \value{
-Character string containing regex pattern
+Character string containing the regex pattern.
 }
 \description{
-Creates a regex pattern from an economy name following standardized rules
-for flexible matching.
+Creates a regular expression pattern from an economy name, following
+standardized rules for flexible matching. This function converts the input
+name to lowercase, escapes special regex characters, and replaces spaces
+with a flexible whitespace pattern (\verb{.?}).
 }
 \keyword{internal}

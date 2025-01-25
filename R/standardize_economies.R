@@ -20,7 +20,6 @@
 # be separate from custom economies is unnecessarily complicated, especially
 # if custom economies takes an alias list.
 
-
 #' Standardize Economy Names and Codes
 #'
 #' @description
@@ -33,9 +32,30 @@
 #' @param code_col Optional name of the column containing economy codes
 #' @param output_cols Character vector specifying desired output columns.
 #'   Options are "economy_name", "economy_id","economy_type", "iso3c", "iso2c"
-#' @param custom_economies Optional list of custom economy definitions
-#' @param custom_names Optional named vector or list the same length as the
-#'   number of rows in the input data, for direct mapping to name_col
+#' @param custom_economies Optional list of custom economy definitions. Each
+#'   element can be either:
+#'   \itemize{
+#'     \item A character string representing the economy's ID (simple case)
+#'     \item A list with elements:
+#'       \itemize{
+#'         \item \code{id} (required): Character string with the economy's ID
+#'         \item \code{aliases} (optional): Character vector of alt. names
+#'       }
+#'   }
+#'   The names of the list elements represent the economy names. Example:
+#'   `list(
+#'     "Custom Economy" = "CST1",
+#'     "Another Economy" = list(id = "CST2", aliases = c("Alt1", "Alt2"))
+#'   )`
+#' @param custom_names Optional named vector or list for custom name mappings.
+#'   The names represent the original names to be replaced, and the values
+#'   represent the replacement names. Matching is case-insensitive. Example:
+#'   `c(
+#'     "United States of America" = "USA",
+#'     "People's Republic of China" = "China"
+#'   )`.
+#'   Note: This is used as a lookup table and does not need to match the length
+#'   of the input data. All elements must be named and contain character values.
 #' @param show_aggregates Logical; whether to report detected aggregate
 #'   economies
 #' @param warn_ambiguous Logical; whether to warn about ambiguous matches
@@ -45,8 +65,17 @@
 #'
 #' @examples
 #' \dontrun{
-#' df <- data.frame(economy = c("USA", "European Union"))
-#' standardize_economy(df, name_col = economy)
+#' df <- data.frame(economy = c("Custom Economy", "Alt1"))
+#' custom_economies <- list(
+#'   "Custom Economy" = "CST1",
+#'   "Another Economy" = list(
+#'     id = "CST2",
+#'     aliases = c("Alt1", "Alt2")
+#'   )
+#' )
+#' standardize_economy(
+#'   df, name_col = economy, custom_economies = custom_economies
+#' )
 #' }
 standardize_economy <- function(
   data,
@@ -61,9 +90,12 @@ standardize_economy <- function(
   # Allow user to use either quoted or unquoted column names
   name_col_expr <- rlang::enquo(name_col)
   name_col_name <- rlang::as_name(name_col_expr)
-  
+
   code_col_expr <- rlang::enquo(code_col)
-  if (!rlang::quo_is_missing(code_col_expr) && !rlang::quo_is_null(code_col_expr)) {
+  if (
+    !rlang::quo_is_missing(code_col_expr) &&
+      !rlang::quo_is_null(code_col_expr)
+  ) {
     code_col_name <- rlang::as_name(code_col_expr)
   } else {
     code_col_name <- NULL
@@ -178,8 +210,8 @@ process_custom_economies <- function(custom_economies) {
 
       # Combine all identifiers and wrap in word boundaries
       aliases <- c(name, unlist(value$aliases))
-      pattern <- paste0("^(", paste(aliases, collapse="|"), ")$")
-      
+      pattern <- paste0("^(", paste(aliases, collapse = "|"), ")$")
+
       tibble::tibble(
         economy_name = name,
         economy_regex = create_economy_regex(pattern),
@@ -299,9 +331,11 @@ standardize_economies_impl <- function(
 
   # Combine standard and custom patterns
   patterns <- if (!is.null(custom_patterns)) {
-    dplyr::bind_rows(economy_patterns, custom_patterns)
+    dplyr::bind_rows(
+      list_economy_patterns(), custom_patterns
+    )
   } else {
-    economy_patterns
+    list_economy_patterns()
   }
 
   # Process each name
@@ -361,7 +395,7 @@ match_economy <- function(name, code, patterns, warn_ambiguous = TRUE) {
   if (!is.null(regex_match)) {
     return(regex_match)
   }
-  
+
   # Initialize result
   result <- list(
     economy_name = name,  # Default to original name

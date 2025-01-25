@@ -7,10 +7,13 @@
 validate_custom_names(custom_names)
 }
 \arguments{
-\item{custom_names}{Named vector or list of custom name mappings}
+\item{custom_names}{A named vector or list of custom name mappings.
+The names of the vector or list are the original names to be replaced,
+and the values are the replacement names.}
 }
 \value{
-Validated character vector of custom names
+A validated character vector of custom names, with names
+corresponding to the original names to be replaced.
 }
 \description{
 Validates custom name mappings to ensure they meet required format
