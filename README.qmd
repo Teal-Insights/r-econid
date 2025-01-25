@@ -1,5 +1,5 @@
 ---
-output: github_document
+format: md
 ---
 
 <a href="https://teal-insights.github.io/r-econid"><img src="man/figures/logo.png" align="right" height="40" alt="r-econid website" /></a>
