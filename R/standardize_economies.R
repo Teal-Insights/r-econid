@@ -3,8 +3,17 @@
 # match on. Indicate in roxygen2 documentation that we recommend iso3c first
 # if available, name second, and that iso2c is also supported.
 #
-# We need to handle the case where the economy_ columns already exist in the
+# We need to handle the case where the `economy_*` columns already exist in the
 # data.
+#
+# We need to enforce that economy_id output codes are unique, including when
+# the user defines a custom economy and when we copy the code column value over
+# to the economy_id column.
+
+# Define valid output columns
+valid_cols <- c(
+  "economy_name", "economy_type", "economy_id", "iso3c", "iso2c"
+)
 
 #' Standardize Economy Names and Codes
 #'
@@ -16,9 +25,11 @@
 #' @param name_col Name of the column containing economy names
 #' @param code_col Optional name of the column containing economy codes
 #' @param output_cols Character vector specifying desired output columns.
-#'   Options are "economy_name", "economy_id","economy_type", "iso3c", "iso2c"
-#' @param show_aggregates Logical; whether to report detected aggregate
-#'   economies
+#'   Options are "economy_name", "economy_id", "economy_type", "iso3c", "iso2c"
+#' @param default_economy_type Character; the default economy type to use if not
+#'   specified in the data. Options are "country", "institution", or
+#'   "aggregate". Defaults to NA. Will be ignored if output_cols do not
+#'   include "economy_type".
 #' @param warn_ambiguous Logical; whether to warn about ambiguous matches
 #'
 #' @return A data frame with standardized economy information merged with the
@@ -33,8 +44,8 @@ standardize_economy <- function(
   data,
   name_col,
   code_col = NULL,
-  output_cols = c("economy_name", "economy_id", "economy_type"),
-  show_aggregates = TRUE,
+  output_cols = c("economy_id", "economy_name", "economy_type"),
+  default_economy_type = NA_character_,
   warn_ambiguous = TRUE
 ) {
   # Allow user to use either quoted or unquoted column names
@@ -70,30 +81,43 @@ standardize_economy <- function(
       warn_ambiguous = warn_ambiguous
     ))
 
-  # Join economy_patterns to the input data and select the requested columns
-  results <- dplyr::full_join(
+  # Join economy_patterns to the input data
+  results <- dplyr::left_join(
     data,
     list_economy_patterns(),
     by = c(economy_id = "economy_id")
-  ) |>
-    dplyr::select(dplyr::all_of(final_cols))
+  )
 
-  # Report aggregates if requested
-  if (show_aggregates && length(results$aggregates) > 0) {
-    cli::cli_inform(c(
-      "!" = "The following unique entries were classified as aggregates:",
-      "*" = results$aggregates
-    ))
+  # Drop any valid_cols not in the final_cols
+  difference <- setdiff(valid_cols, final_cols)
+  results <- results[, !(names(results) %in% difference)]
+
+  # Replace any NA values in economy_name with the value in name_col
+  if ("economy_name" %in% final_cols) {
+    results$economy_name[
+      is.na(results$economy_name)
+    ] <- data[[name_col_name]][
+      is.na(results$economy_name)
+    ]
   }
 
-  # Prepare output
-  out_data <- results$data[final_cols]
+  # Replace any NA values in economy_id with the value in code_col
+  if (!is.null(code_col_name) && "economy_id" %in% final_cols) {
+    results$economy_id[
+      is.na(results$economy_id)
+    ] <- data[[code_col_name]][
+      is.na(results$economy_id)
+    ]
+  }
 
-  # Bind with original data, excluding the name column
-  dplyr::bind_cols(
-    data[setdiff(names(data), name_col_name)],
-    out_data
-  )
+  # Replace any NA values in economy_type with the default_economy_type
+  if ("economy_type" %in% final_cols) {
+    results$economy_type[
+      is.na(results$economy_type)
+    ] <- default_economy_type
+  }
+
+  results
 }
 
 #' Validate inputs for economy standardization
@@ -129,11 +153,6 @@ validate_economy_inputs <- function(
     cli::cli_abort("Column {.var {code_col_name}} not found in data.")
   }
 
-  # Define valid output columns
-  valid_cols <- c(
-    "economy_name", "economy_type", "economy_id", "iso3c", "iso2c"
-  )
-
   # Validate output_cols
   invalid_cols <- setdiff(output_cols, valid_cols)
   if (length(invalid_cols) > 0) {
@@ -165,7 +184,7 @@ match_economy_ids <- function(
   results <- c()
 
   # Process each name
-  for (i in seq_len(names)) {
+  for (i in seq_along(names)) {
     current_name <- names[i]
     current_code <- if (!is.null(codes)) {
       codes[i]
@@ -176,6 +195,8 @@ match_economy_ids <- function(
     # Try to match the current code (if provided)
     if (!is.null(current_code)) {
       code_match_results <- try_regex_match(current_code)
+    } else {
+      code_match_results <- c()
     }
 
     # Try to match the current name
