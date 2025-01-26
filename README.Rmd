@@ -110,8 +110,6 @@ flowchart TD
     I --> J[Return Final Data Frame<br/>with Requested output_cols]
 ```
 
-![Program flow diagram](man/figures/flow_diagram.png)
-
 ### `standardize_economies()` Function
 
 ``` {r}
