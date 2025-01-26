@@ -10,20 +10,16 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
 Suggests: 
     renv,
-    testthat (>= 3.0.0),
     devtools (>= 2.4.5),
     lintr (>= 3.1.2),
     languageserver (>= 0.3.16),
     dotenv,
     dplyr,
-    tidyr
+    tidyr,
+    ellmer
 Config/testthat/edition: 3
 URL: https://teal-insights.github.io/r-econid, https://github.com/Teal-Insights/r-econid
 BugReports: https://github.com/Teal-Insights/r-econid/issues
-Remotes: 
-    r-lib/devtools,
-    r-lib/lintr,
-    REditorSupport/languageserver
 Depends: 
-    R (>= 2.10)
+    R (>= 3.5)
 LazyData: true

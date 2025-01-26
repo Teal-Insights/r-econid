@@ -25,4 +25,4 @@ country_aggregates[char_cols] <- lapply(
 )
 
 # Save the dataset to an .rda file for export using usethis::use_data
-usethis::use_data(country_aggregates, overwrite = TRUE)
+usethis::use_data(country_aggregates, overwrite = TRUE, internal = TRUE)

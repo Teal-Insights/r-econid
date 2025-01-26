@@ -243,5 +243,5 @@ geographies <- geographies_wdi |>
 
 usethis::use_data(
   geographies, counterparts,
-  overwrite = TRUE, internal = FALSE
+  overwrite = TRUE, internal = TRUE
 )
