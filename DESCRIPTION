@@ -19,7 +19,8 @@ Suggests:
     ellmer,
     purrr,
     stringr,
-    tibble
+    tibble,
+    testthat
 Config/testthat/edition: 3
 URL: https://teal-insights.github.io/r-econid, https://github.com/Teal-Insights/r-econid
 BugReports: https://github.com/Teal-Insights/r-econid/issues
