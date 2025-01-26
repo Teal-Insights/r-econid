@@ -14,8 +14,8 @@
 <link rel="apple-touch-icon" type="image/png" sizes="60x60" href="apple-touch-icon-60x60.png">
 <script src="deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
-<script src="deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.4.2/css/all.min.css" rel="stylesheet">
-<link href="deps/font-awesome-6.4.2/css/v4-shims.min.css" rel="stylesheet">
+<script src="deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
+<link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="Standardized Geography for Economists">
 <meta name="description" content="Provides standardized country and aggregate mappings for working with economic data published by the IMF and World Bank. Aims to facilitate consistent data analysis and reporting.">
 <meta property="og:description" content="Provides standardized country and aggregate mappings for working with economic data published by the IMF and World Bank. Aims to facilitate consistent data analysis and reporting.">
@@ -61,143 +61,226 @@
 <!-- badges: start -->
 
 <div class="section level2">
+<h2 id="overview">Overview<a class="anchor" aria-label="anchor" href="#overview"></a>
+</h2>
+<p>The <code>econid</code> R package is a foundational building block of the <a href="https://econdataverse.org" class="external-link">econdataverse</a> family of packages aimed at helping economists and financial professionals work with sovereign-level economic data. The package is aimed at domain experts in economics and finance who need to analyze and join data across multiple sources, but who aren’t necessarily R programming experts.</p>
+</div>
+<div class="section level2">
+<h2 id="motivation">Motivation<a class="anchor" aria-label="anchor" href="#motivation"></a>
+</h2>
+<p>Economic and financial datasets present unique challenges when working with country-level data:</p>
+<ol style="list-style-type: decimal">
+<li><strong>Mixed Entity Types</strong></li>
+</ol>
+<p>Datasets often combine different types of entities in the same “country” column:</p>
+<ul>
+<li>Countries and sovereign states</li>
+<li>Territories and administrative regions (e.g., Puerto Rico, Hong Kong)</li>
+<li>Geographic or economic aggregates (e.g., “Sub-Saharan Africa”, “Low Income Countries”)</li>
+<li>International institutions (e.g., “World Bank”, “IMF”)</li>
+</ul>
+<ol start="2" style="list-style-type: decimal">
+<li><strong>Inconsistent Naming</strong></li>
+</ol>
+<p>The same entity might appear in various formats:</p>
+<ul>
+<li>Different codes (ISO-2, ISO-3, numeric codes)</li>
+<li>Various name formats (e.g., “United States”, “US”, “U.S.A.”)</li>
+<li>Historical names or non-English variants</li>
+</ul>
+<ol start="3" style="list-style-type: decimal">
+<li><strong>Complex Analysis Needs</strong></li>
+</ol>
+<p>Researchers often need to:</p>
+<ul>
+<li>Compare individual countries with regional aggregates (e.g., Nigeria vs. Sub-Saharan Africa)</li>
+<li>Join data across datasets with different naming conventions</li>
+<li>Handle ambiguous cases (e.g., “Congo” could refer to multiple countries)</li>
+<li>Work with specialized entities not in standard ISO lists</li>
+</ul>
+<p><code>econid</code> addresses these challenges through:</p>
+<ul>
+<li>Robust name standardization with clear entity type identification</li>
+<li>Flexible customization options for special cases</li>
+<li>Warning systems for missing or ambiguous matches</li>
+<li>Tools for fuzzy searching, filtering, and joining across datasets</li>
+</ul>
+</div>
+<div class="section level2">
+<h2 id="design-philosophy">Design Philosophy<a class="anchor" aria-label="anchor" href="#design-philosophy"></a>
+</h2>
+<p>The design philosophy of the package follows <a href="https://www.tidyverse.org/principles/" class="external-link">tidyverse principles</a> and the <a href="https://www.tidyverse.org/manifesto/" class="external-link">tidy tools manifesto</a>. We strive to practice human-centered design, with clear documentation and examples and graceful handling of edge cases. We invite you to submit suggestions for improvements and extensions on the package’s <a href="https://github.com/Teal-Insights/r-econid/issues" class="external-link">Github Issues</a> page.</p>
+<p>We have designed the package to handle only the most common entities financial and economic professionals might encounter in a dataset (249 in total), not to handle every edge case. However, the package allows users to extend the standardization list with custom entities to flexibly accommodate any unconventional use case.</p>
+</div>
+<div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
+<p>Until the package is published on CRAN, you can install it from GitHub using the <code>remotes</code> package.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">remotes</span><span class="fu">::</span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">"Teal-Insights/r-econid"</span><span class="op">)</span></span></code></pre></div>
+<p>Then, load the package in your R session or Quarto or RMarkdown notebook:</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://teal-insights.github.io/r-econid">econid</a></span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="usage">Usage<a class="anchor" aria-label="anchor" href="#usage"></a>
 </h2>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://teal-insights.github.io/r-econid">econid</a></span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">country_aggregates</span><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb3"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="do">##   country_name      country_group group_type</span></span>
-<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a><span class="do">## 1    Australia Advanced Economies        IMF</span></span>
-<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a><span class="do">## 2      Austria Advanced Economies        IMF</span></span>
-<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a><span class="do">## 3      Belgium Advanced Economies        IMF</span></span>
-<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a><span class="do">## 4       Canada Advanced Economies        IMF</span></span>
-<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a><span class="do">## 5  Switzerland Advanced Economies        IMF</span></span>
-<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a><span class="do">## 6       Cyprus Advanced Economies        IMF</span></span></code></pre></div>
+<p>Below is a high-level overview of how <code>econid</code> works in practice, followed by a more detailed description of the main function and its parameters. The examples and tests illustrate typical usage patterns.</p>
+<div class="section level3">
+<h3 id="summation">Summation<a class="anchor" aria-label="anchor" href="#summation"></a>
+</h3>
+<ol style="list-style-type: decimal">
+<li><p><strong>Input validation</strong><br>
+The package checks if your input dataset and specified columns exist. It also ensures you only request valid output columns (e.g., <code>"economy_name"</code>, <code>"economy_id"</code>, <code>"economy_type"</code>, <code>"iso2c"</code>, and <code>"iso3c"</code>). Any invalid columns raise an error.</p></li>
+<li>
+<p><strong>Name and code matching</strong><br>
+The function <code><a href="reference/standardize_economies.html">standardize_economies()</a></code> looks in your dataset for names (and optionally codes) that might match an economy. It:</p>
+<ul>
+<li>Converts the names to UTF-8 for consistent processing.</li>
+<li>Calls internal functions to try matching each entry via case-insensitive regex patterns.</li>
+<li>If both a code column and name column are provided, it attempts to match on both and merges results (favoring the first match).<br>
+</li>
+<li>If multiple matches exist for a single row, a warning is raised (unless suppressed).</li>
+</ul>
+</li>
+<li><p><strong>Merging standardized columns</strong><br>
+Once the function finds a match, it returns a new or augmented data frame with standardized columns (e.g., <code>"economy_id"</code>, <code>"economy_name"</code>, <code>"economy_type"</code>, etc.). You control exactly which standardized columns appear via the <code>output_cols</code> argument.</p></li>
+<li>
+<p><strong>Handling missing and custom cases</strong></p>
+<ul>
+<li>When an economy cannot be matched, it retains the original input name in the <code>"economy_name"</code> column (if requested) and shows <code>NA</code> in <code>"economy_id"</code>.<br>
+</li>
+<li>You can optionally specify a default economy type for unmatched entries (<code>default_economy_type</code>).</li>
+<li>Warnings are issued for ambiguous or incomplete matches if <code>warn_ambiguous</code> is <code>TRUE</code>.</li>
+</ul>
+</li>
+</ol>
+</div>
+<div class="section level3">
+<h3 id="program-flow">Program Flow<a class="anchor" aria-label="anchor" href="#program-flow"></a>
+</h3>
+<pre class="mermaid"><code>flowchart TD
+    A[standardize_economies] --&gt; B[Validate Inputs]
+    B --&gt; C[Convert name column to UTF-8]
+    C --&gt; D[For each row: try_regex_match]
+    D --&gt; E[Possible Multiple or No Matches]
+    E --&gt;|Multiple| F[Warn if warn_ambiguous=TRUE]
+    E --&gt;|Single Match or None| G[Assign economy_id]
+    F --&gt; G
+    G --&gt; H[Join with list_economy_patterns]
+    H --&gt; I[Replace NAs in economy_name, economy_id,&lt;br/&gt;and economy_type if needed]
+    I --&gt; J[Return Final Data Frame&lt;br/&gt;with Requested output_cols]</code></pre>
+<figure><img src="reference/figures/flow_diagram.png" alt="Program flow diagram"><figcaption aria-hidden="true">
+Program flow diagram
+</figcaption></figure>
+</div>
+<div class="section level3">
+<h3 id="standardize_economies-function">
+<code>standardize_economies()</code> Function<a class="anchor" aria-label="anchor" href="#standardize_economies-function"></a>
+</h3>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">country_codes</span><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb5"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="do">##          country is_wb_country        wb_name  cldr_short_en iso2c iso3c iso3n</span></span>
-<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a><span class="do">## 1    Afghanistan          TRUE    Afghanistan    Afghanistan    AF   AFG     4</span></span>
-<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a><span class="do">## 2  Åland Islands         FALSE           &lt;NA&gt;  Åland Islands    AX   ALA   248</span></span>
-<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a><span class="do">## 3        Albania          TRUE        Albania        Albania    AL   ALB     8</span></span>
-<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a><span class="do">## 4        Algeria          TRUE        Algeria        Algeria    DZ   DZA    12</span></span>
-<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a><span class="do">## 5 American Samoa          TRUE American Samoa American Samoa    AS   ASM    16</span></span>
-<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a><span class="do">## 6        Andorra          TRUE        Andorra        Andorra    AD   AND    20</span></span>
-<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a><span class="do">##   imf continent country_name_en_regex wb_counterpart_id</span></span>
-<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a><span class="do">## 1 512      Asia                afghan               625</span></span>
-<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a><span class="do">## 2  NA    Europe                 åland              &lt;NA&gt;</span></span>
-<span id="cb5-11"><a href="#cb5-11" tabindex="-1"></a><span class="do">## 3 914    Europe               albania               071</span></span>
-<span id="cb5-12"><a href="#cb5-12" tabindex="-1"></a><span class="do">## 4 612    Africa               algeria               130</span></span>
-<span id="cb5-13"><a href="#cb5-13" tabindex="-1"></a><span class="do">## 5 859   Oceania  ^(?=.*americ).*samoa              &lt;NA&gt;</span></span>
-<span id="cb5-14"><a href="#cb5-14" tabindex="-1"></a><span class="do">## 6  NA    Europe               andorra               025</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>economy <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"United States"</span>, <span class="st">"China"</span>, <span class="st">"NotACountry"</span><span class="op">)</span>, code <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"USA"</span>, <span class="st">"CHN"</span>, <span class="st">"ZZZ"</span><span class="op">)</span>, obs_value <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">3</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="reference/standardize_economies.html">standardize_economies</a></span><span class="op">(</span></span>
+<span>  data <span class="op">=</span> <span class="va">df</span>,</span>
+<span>  name_col <span class="op">=</span> <span class="va">economy</span>,</span>
+<span>  code_col <span class="op">=</span> <span class="va">code</span>,</span>
+<span>  output_cols <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"economy_id"</span>, <span class="st">"economy_name"</span>, <span class="st">"economy_type"</span><span class="op">)</span>,</span>
+<span>  default_economy_type <span class="op">=</span> <span class="cn">NA_character_</span>,</span>
+<span>  warn_ambiguous <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="do">##         economy code obs_value economy_id  economy_name economy_type</span></span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a><span class="do">## 1 United States  USA         1        USA United States      country</span></span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a><span class="do">## 2         China  CHN         2        CHN         China      country</span></span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a><span class="do">## 3   NotACountry  ZZZ         3        ZZZ   NotACountry         &lt;NA&gt;</span></span></code></pre></div>
+<div class="section level4">
+<h4 id="parameters">Parameters<a class="anchor" aria-label="anchor" href="#parameters"></a>
+</h4>
+<ul>
+<li><p><strong>data</strong><br>
+A data frame (or tibble) containing the economies to be standardized.</p></li>
+<li><p><strong>name_col</strong><br>
+The unquoted or quoted name of the column in <code>data</code> that contains the country or entity names.</p></li>
+<li><p><strong>code_col</strong> <em>(optional)</em><br>
+An additional column name that might contain ISO or custom codes. When present, the function attempts to match on both this code and the name. If both match, a warning about ambiguity is issued.</p></li>
+<li>
+<p><strong>output_cols</strong> <em>(optional)</em><br>
+A character vector of columns to include in the final output. Valid options:</p>
+<ul>
+<li>
+<code>"economy_id"</code><br>
+</li>
+<li>
+<code>"economy_name"</code><br>
+</li>
+<li>
+<code>"economy_type"</code><br>
+</li>
+<li>
+<code>"iso3c"</code><br>
+</li>
+<li><code>"iso2c"</code></li>
+</ul>
+<p>Defaults to <code>c("economy_id", "economy_name", "economy_type")</code>.</p>
+</li>
+<li><p><strong>default_economy_type</strong> <em>(optional)</em><br>
+A character scalar (<code>"country"</code>, <code>"institution"</code>, or <code>"aggregate"</code>, etc.) to assign as the economy type where no match is found. This value only applies if <code>"economy_type"</code> is requested in <code>output_cols</code>.</p></li>
+<li><p><strong>warn_ambiguous</strong> <em>(optional)</em><br>
+A logical indicating whether to warn if a single row in <code>data</code> can match more than one economy. Defaults to <code>TRUE</code>.</p></li>
+</ul>
+</div>
+<div class="section level4">
+<h4 id="returns">Returns<a class="anchor" aria-label="anchor" href="#returns"></a>
+</h4>
+<p>A data frame (or tibble) the same size as <code>data</code>, augmented (or merged) with the requested standardized columns.</p>
+</div>
+</div>
+<div class="section level3">
+<h3 id="examples">Examples<a class="anchor" aria-label="anchor" href="#examples"></a>
+</h3>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Specifying a code column and additional output columns</span></span>
+<span><span class="va">df2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>  econ_name <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"United States"</span>, <span class="st">"united.states"</span>, <span class="st">"Germany"</span>, <span class="st">"NotInList"</span><span class="op">)</span>,</span>
+<span>  econ_code <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"USA"</span>, <span class="cn">NA</span>, <span class="st">"DEU"</span>, <span class="st">"ZZZ"</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">result2</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/standardize_economies.html">standardize_economies</a></span><span class="op">(</span></span>
+<span>  <span class="va">df2</span>,</span>
+<span>  name_col <span class="op">=</span> <span class="va">econ_name</span>,</span>
+<span>  code_col <span class="op">=</span> <span class="va">econ_code</span>,</span>
+<span>  output_cols <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"economy_id"</span>, <span class="st">"economy_name"</span>, <span class="st">"iso2c"</span>, <span class="st">"iso3c"</span><span class="op">)</span>,</span>
+<span>  default_economy_type <span class="op">=</span> <span class="st">"Aggregate"</span></span>
+<span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result2</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="do">##       econ_name econ_code economy_id  economy_name iso3c iso2c</span></span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a><span class="do">## 1 United States       USA        USA United States   USA    US</span></span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a><span class="do">## 2 united.states      &lt;NA&gt;        USA United States   USA    US</span></span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a><span class="do">## 3       Germany       DEU        DEU       Germany   DEU    DE</span></span>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a><span class="do">## 4     NotInList       ZZZ        ZZZ     NotInList  &lt;NA&gt;  &lt;NA&gt;</span></span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Ambiguities and warnings</span></span>
+<span><span class="va">df3</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>  name <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"USA"</span>, <span class="st">"France"</span><span class="op">)</span>,</span>
+<span>  code <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"FRA"</span>, <span class="cn">NA</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">result3</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/standardize_economies.html">standardize_economies</a></span><span class="op">(</span><span class="va">df3</span>, name_col <span class="op">=</span> <span class="va">name</span>, code_col <span class="op">=</span> <span class="va">code</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a><span class="do">## Warning: There was 1 warning in `dplyr::mutate()`.</span></span>
+<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a><span class="do">## ℹ In argument: `economy_id = match_economy_ids(...)`.</span></span>
+<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a><span class="do">## Caused by warning:</span></span>
+<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a><span class="do">## ! ! Ambiguous match for "USA"</span></span>
+<span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a><span class="do">## • Matches multiple patterns: FRA, USA</span></span></code></pre></div>
+<p>Use these patterns to explore the package and integrate it into your data cleaning workflows. For finer-grained operations (e.g., fuzzy matching or custom expansions), keep an eye on the package roadmap for future enhancements. We welcome your feedback and contributions!</p>
+</div>
 </div>
 <div class="section level2">
-<h2 id="development-workflow">Development Workflow<a class="anchor" aria-label="anchor" href="#development-workflow"></a>
+<h2 id="roadmap">Roadmap<a class="anchor" aria-label="anchor" href="#roadmap"></a>
 </h2>
-<div class="section level3">
-<h3 id="create-functions-and-tests">Create functions and tests<a class="anchor" aria-label="anchor" href="#create-functions-and-tests"></a>
-</h3>
 <ul>
-<li>
-<code>usethis::use_r(name=)</code> creates a pair of source and test files with the selected filename</li>
-<li>If the source file already exists and is open in your IDE, you can instead do <code><a href="https://usethis.r-lib.org/reference/use_r.html" class="external-link">usethis::use_test()</a></code> to create an appropriately named test file</li>
+<li>Allow users to extend the list with custom economies</li>
+<li>Add a fuzzy join function</li>
+<li>Add a fuzzy filter function</li>
 </ul>
-</div>
-<div class="section level3">
-<h3 id="add-dependencies">Add dependencies<a class="anchor" aria-label="anchor" href="#add-dependencies"></a>
-</h3>
-<ul>
-<li>
-<code>usethis::use_package(package)</code> adds the named package to DESCRIPTION dependencies</li>
-<li>
-<code>usethis::use_dev_package(package, type="Suggests")</code> adds a development dependency (won’t be installed for end-users)</li>
-<li>
-<code>usethis::use_import_from(package, fun=)</code> adds a single function import to the roxygen2 docs</li>
-</ul>
-</div>
-<div class="section level3">
-<h3 id="install-and-update-dependencies">Install and update dependencies<a class="anchor" aria-label="anchor" href="#install-and-update-dependencies"></a>
-</h3>
-<ul>
-<li>
-<code><a href="https://rstudio.github.io/renv/reference/init.html" class="external-link">renv::init()</a></code> sets up the project’s file system for dependency management with renv</li>
-<li>
-<code><a href="https://rstudio.github.io/renv/reference/install.html" class="external-link">renv::install()</a></code> installs all dependencies listed in DESCRIPTION, <em>including Suggests/development dependencies</em>
-</li>
-<li>
-<code><a href="https://rstudio.github.io/renv/reference/snapshot.html" class="external-link">renv::snapshot()</a></code> regenerates the lockfile to match currently installed dependencies, <em>excluding Suggests/development dependencies</em>
-</li>
-<li>
-<code><a href="https://rstudio.github.io/renv/reference/update.html" class="external-link">renv::update()</a></code> updates all package dependencies to latest versions</li>
-<li>
-<code><a href="https://rstudio.github.io/renv/reference/restore.html" class="external-link">renv::restore()</a></code> installs all dependencies declared in the lockfile</li>
-</ul>
-</div>
-<div class="section level3">
-<h3 id="add-data">Add Data<a class="anchor" aria-label="anchor" href="#add-data"></a>
-</h3>
-<ul>
-<li>
-<code>usethis::use_data(some_dataframe, name="filename")</code> saves a data object to “data/filename.rda” for use as a package export</li>
-<li>
-<code>usethis::use_data_raw("dataset_name")</code> creates an empty R script in the “data-raw” directory—this is where you put any automation scripts that are used for generating/updating the exported dataset but that you <em>don’t</em> want to export to the end-user</li>
-</ul>
-</div>
-<div class="section level3">
-<h3 id="add-documentation">Add Documentation<a class="anchor" aria-label="anchor" href="#add-documentation"></a>
-</h3>
-<ul>
-<li>
-<code>usethis::use_vignette("vignette_name")</code> creates a new vignette template in the “vignettes” directory</li>
-<li>
-<code>usethis::use_article("article_name")</code> creates a new article template in the “vignettes/articles” directory</li>
-<li>
-<code><a href="https://usethis.r-lib.org/reference/use_package_doc.html" class="external-link">usethis::use_package_doc()</a></code> creates a package-level documentation file</li>
-</ul>
-</div>
-<div class="section level3">
-<h3 id="build-and-check-package">Build and Check Package<a class="anchor" aria-label="anchor" href="#build-and-check-package"></a>
-</h3>
-<ul>
-<li>
-<code><a href="https://devtools.r-lib.org/reference/document.html" class="external-link">devtools::document()</a></code> generates documentation files from roxygen2 comments</li>
-<li>
-<code><a href="https://devtools.r-lib.org/reference/build_rmd.html" class="external-link">devtools::build_readme()</a></code> builds the README.md file from README.Rmd</li>
-<li>
-<code><a href="https://devtools.r-lib.org/reference/build.html" class="external-link">devtools::build()</a></code> builds the package into a .tar.gz file</li>
-<li>
-<code><a href="https://devtools.r-lib.org/reference/install.html" class="external-link">devtools::install()</a></code> installs the package locally</li>
-<li>
-<code><a href="https://devtools.r-lib.org/reference/check.html" class="external-link">devtools::check()</a></code> runs R CMD check on the package</li>
-<li>
-<code><a href="https://devtools.r-lib.org/reference/test.html" class="external-link">devtools::test()</a></code> runs all tests in the package</li>
-</ul>
-</div>
-<div class="section level3">
-<h3 id="build-documentation">Build Documentation<a class="anchor" aria-label="anchor" href="#build-documentation"></a>
-</h3>
-<ul>
-<li>
-<code><a href="https://pkgdown.r-lib.org/reference/build_site.html" class="external-link">pkgdown::build_site()</a></code> builds a documentation website for the package</li>
-<li>
-<code><a href="https://devtools.r-lib.org/reference/build_vignettes.html" class="external-link">devtools::build_vignettes()</a></code> builds all vignettes in the package</li>
-</ul>
-</div>
-<div class="section level3">
-<h3 id="cran-submission">CRAN Submission<a class="anchor" aria-label="anchor" href="#cran-submission"></a>
-</h3>
-<ul>
-<li>
-<code><a href="https://devtools.r-lib.org/reference/release.html" class="external-link">devtools::release()</a></code> guides you through the CRAN submission process</li>
-<li>Update <code>cran-comments.md</code> with any necessary explanations for CRAN maintainers</li>
-<li>Use <code><a href="https://devtools.r-lib.org/reference/check_rhub.html" class="external-link">devtools::check_rhub()</a></code> to test on R-hub before submission</li>
-</ul>
-</div>
 </div>
 </div>
 
