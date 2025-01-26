@@ -4,19 +4,16 @@
 \alias{try_regex_match}
 \title{Try Regex Pattern Match}
 \usage{
-try_regex_match(name, patterns, warn_ambiguous)
+try_regex_match(name)
 }
 \arguments{
-\item{name}{Character string of economy name}
-
-\item{patterns}{Tibble of matching patterns}
-
-\item{warn_ambiguous}{Logical; whether to warn about ambiguous matches}
+\item{name}{Character string of economy name or code}
 }
 \value{
-List containing matched economy information or NULL
+Character vector of economy_ids
 }
 \description{
-Attempts to match an economy name using regex patterns.
+Attempts to match a string and return matching economy_id(s) using regex
+patterns from economy_patterns.
 }
 \keyword{internal}

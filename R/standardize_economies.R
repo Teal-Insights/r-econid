@@ -40,7 +40,9 @@ valid_cols <- c(
 #' df <- data.frame(economy = c("United States", "China"))
 #' standardize_economy(df, name_col = economy)
 #' }
-standardize_economy <- function(
+#'
+#' @export
+standardize_economies <- function(
   data,
   name_col,
   code_col = NULL,
@@ -89,7 +91,7 @@ standardize_economy <- function(
   )
 
   # Drop any valid_cols not in the final_cols
-  difference <- setdiff(valid_cols, final_cols)
+  difference <- setdiff(c(valid_cols, "economy_regex"), final_cols)
   results <- results[, !(names(results) %in% difference)]
 
   # Replace any NA values in economy_name with the value in name_col

@@ -8,7 +8,7 @@ test_that("basic country standardization works", {
     "NotACountry",    NA
   )
 
-  result <- standardize_economy(test_df, name_col = economy, code_col = code)
+  result <- standardize_economies(test_df, name_col = economy, code_col = code)
 
   expect_equal(
     result$economy_name,
@@ -29,7 +29,7 @@ test_that("ISO code matching takes precedence", {
 
   # Should prefer ISO code match but raise a warning
   expect_warning(
-    result <- standardize_economy(test_df, name_col = name, code_col = code),
+    result <- standardize_economies(test_df, name_col = name, code_col = code),
     "Ambiguous match"
   )
   expect_equal(result$economy_id, c("FRA", "FRA"))
@@ -43,7 +43,7 @@ test_that("standardization works without code column", {
     "NotACountry"
   )
 
-  result <- standardize_economy(test_df, name_col = country)
+  result <- standardize_economies(test_df, name_col = country)
 
   expect_equal(result$economy_name, c("United States", "France", "NotACountry"))
   expect_equal(result$economy_id, c("USA", "FRA", NA_character_))
@@ -57,7 +57,7 @@ test_that("standardization fails with invalid output columns", {
 
   # Test single invalid column
   expect_error(
-    standardize_economy(
+    standardize_economies(
       test_df,
       name_col = country,
       output_cols = "invalid_col"
@@ -67,7 +67,7 @@ test_that("standardization fails with invalid output columns", {
 
   # Test mix of valid and invalid columns
   expect_error(
-    standardize_economy(
+    standardize_economies(
       test_df,
       name_col = country,
       output_cols = c("economy_name", "bad_col", "worse_col")
@@ -169,4 +169,47 @@ test_that("match_economy_ids is case insensitive", {
   result <- match_economy_ids(names)
 
   expect_equal(result, c("FRA", "USA", "GBR"))
+})
+
+test_that("output_cols argument correctly filters columns", {
+  valid_cols <- c(
+    "economy_name", "economy_type", "economy_id", "iso3c", "iso2c"
+  )
+  test_df <- tibble::tribble(
+    ~economy,         ~code,
+    "United States",  "USA",
+    "France",         "FRA"
+  )
+
+  # Test subset of valid columns
+  result <- standardize_economies(
+    test_df,
+    name_col = economy,
+    code_col = code,
+    output_cols = c("economy_id", "iso3c")
+  )
+
+  # Verify included columns
+  expect_true(
+    all(c("economy", "code", "economy_id", "iso3c") %in% names(result))
+  )
+  # Verify excluded valid columns and regex column
+  expect_false(
+    any(c(
+      "economy_name", "economy_type", "iso2c", "economy_regex"
+    ) %in% names(result))
+  )
+
+  # Test all valid columns
+  result_all <- standardize_economies(
+    test_df,
+    name_col = economy,
+    code_col = code,
+    output_cols = valid_cols
+  )
+
+  # Verify all valid columns present with original columns
+  expect_true(all(c("economy", "code", valid_cols) %in% names(result_all)))
+  # Ensure regex column still excluded
+  expect_false("economy_regex" %in% names(result_all))
 })
