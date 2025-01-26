@@ -16,10 +16,16 @@ Suggests:
     dotenv,
     dplyr,
     tidyr,
-    ellmer
+    ellmer,
+    purrr,
+    stringr,
+    tibble
 Config/testthat/edition: 3
 URL: https://teal-insights.github.io/r-econid, https://github.com/Teal-Insights/r-econid
 BugReports: https://github.com/Teal-Insights/r-econid/issues
 Depends: 
     R (>= 3.5)
 LazyData: true
+Imports: 
+    cli,
+    rlang
