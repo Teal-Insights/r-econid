@@ -2,16 +2,22 @@
 % Please edit documentation in R/list_economy_patterns.R
 \name{list_economy_patterns}
 \alias{list_economy_patterns}
-\title{Economy Patterns Data}
+\title{List economy patterns}
 \usage{
 list_economy_patterns()
 }
 \value{
-A character vector containing regular expression patterns for economic indicators
+A data frame with the following columns:
+\describe{
+\item{economy_name}{Economy name}
+\item{economy_regex}{Regular expression pattern for matching economy names}
+\item{iso2c}{ISO 3166-1 alpha-2 code}
+\item{iso3c}{ISO 3166-1 alpha-3 code}
+}
 }
 \description{
-This dataset contains regular expression patterns for identifying economic indicators.
-It is accessible through this function.
+This function returns a tibble containing regular expression patterns for
+identifying economic indicators.
 }
 \examples{
 patterns <- list_economy_patterns()

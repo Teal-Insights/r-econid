@@ -100,7 +100,7 @@ library(econid)
 <figure class=''>
 
 <img src="README_files\figure-markdown_strict\mermaid-figure-1.png"
-style="width:8.33in;height:16.01in" />
+style="width:12.35in;height:17.01in" />
 
 </figure>
 

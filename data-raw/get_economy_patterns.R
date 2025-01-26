@@ -523,7 +523,8 @@ economy_patterns <- tibble::tribble(
   ), "GGY", "GG",
 
   "Guinea", paste0(
-    "^(?!.*eq)(?!.*span)(?!.*bissau)(?!.*portu)(?!.*new).*guinea|", # exclude Equatorial Guinea, Guinea-Bissau, Papua New Guinea
+    # exclude Equatorial Guinea, Guinea-Bissau, Papua New Guinea
+    "^(?!.*eq)(?!.*span)(?!.*bissau)(?!.*portu)(?!.*new).*guinea|",
     "^GIN$|^GN$"
   ), "GIN", "GN",
 
@@ -786,7 +787,7 @@ economy_patterns <- tibble::tribble(
 
   "Moldova", paste0(
     "moldov|",
-    "b(a|e)ssarabia|", # historical: Bessarabia/Bassarabia
+    "b(a|e)ssarabia|", # historical: Bessarabia or Bassarabia
     "^MDA$|^MD$"
   ), "MDA", "MD",
 
@@ -843,7 +844,8 @@ economy_patterns <- tibble::tribble(
   ), "NPL", "NP",
 
   "Netherlands", paste0(
-    "^(?!.*\\bant)(?!.*\\bcarib).*netherlands|", # exclude Netherlands Antilles and Caribbean Netherlands
+    # exclude Netherlands Antilles and Caribbean Netherlands
+    "^(?!.*\\bant)(?!.*\\bcarib).*netherlands|",
     "holland|", # common alternative name
     "^NLD$|^NL$"
   ), "NLD", "NL",
@@ -1090,8 +1092,9 @@ economy_patterns <- tibble::tribble(
   ), "SGS", "GS",
 
   "South Korea", paste0(
-    "^(?!.*d.*p.*r)(?!.*democrat)(?!.*dem.*rep)(?!.*people)(?!.*north).*\\bkorea",
-    "(?!.*d.*p.*r)(?!.*dem.*rep)|", # complex negative lookaheads to exclude North Korea
+    # complex negative lookaheads to exclude North Korea
+    "^(?!.*d.*p.*r)(?!.*democrat)(?!.*dem.*rep)(?!.*people)(?!.*north)",
+    ".*\\bkorea|",
     "^KOR$|^KR$"
   ), "KOR", "KR",
 
@@ -1362,7 +1365,7 @@ economy_patterns <- tibble::tribble(
 
   "Zimbabwe", paste0(
     "zimbabwe|",
-    "^(?!.*northern).*rhodesia|", # historical, exclude Northern Rhodesia (Zambia)
+    "^(?!.*northern).*rhodesia|", # Rhodesia but not Northern Rhodesia (Zambia)
     "^ZWE$|^ZW$"
   ), "ZWE", "ZW",
 
@@ -1371,6 +1374,19 @@ economy_patterns <- tibble::tribble(
     "^ALA$|^AX$"
   ), "ALA", "AX"
 )
+
+# Add an economy_id column to the tibble with iso3c as the id
+economy_patterns <- economy_patterns %>%
+  dplyr::mutate(economy_id = iso3c)
+
+# Add an economy_type column to the tibble with "country" as the type
+economy_patterns <- economy_patterns %>%
+  dplyr::mutate(economy_type = "country")
+
+economy_patterns <- economy_patterns %>%
+  dplyr::select(
+    economy_id, economy_name, iso3c, iso2c, economy_type, economy_regex
+  )
 
 # Save data --------------------------------------------------------------
 

@@ -9,8 +9,6 @@ standardize_economy(
   name_col,
   code_col = NULL,
   output_cols = c("economy_name", "economy_id", "economy_type"),
-  custom_economies = NULL,
-  custom_names = NULL,
   show_aggregates = TRUE,
   warn_ambiguous = TRUE
 )
@@ -25,26 +23,6 @@ standardize_economy(
 \item{output_cols}{Character vector specifying desired output columns.
 Options are "economy_name", "economy_id","economy_type", "iso3c", "iso2c"}
 
-\item{custom_economies}{Optional list of custom economy definitions. Each
-element can be either:
-\itemize{
-\item A character string representing the economy's ID (simple case)
-\item A list with elements:
-\itemize{
-\item \code{id} (required): Character string with the economy's ID
-\item \code{aliases} (optional): Character vector of alt. names
-}
-}
-The names of the list elements represent the economy names. Example:
-\code{list( "Custom Economy" = "CST1", "Another Economy" = list(id = "CST2", aliases = c("Alt1", "Alt2")) )}}
-
-\item{custom_names}{Optional named vector or list for custom name mappings.
-The names represent the original names to be replaced, and the values
-represent the replacement names. Matching is case-insensitive. Example:
-\code{c( "United States of America" = "USA", "People's Republic of China" = "China" )}.
-Note: This is used as a lookup table and does not need to match the length
-of the input data. All elements must be named and contain character values.}
-
 \item{show_aggregates}{Logical; whether to report detected aggregate
 economies}
 
@@ -56,21 +34,11 @@ input data
 }
 \description{
 Standardizes economy names and codes in a dataset by matching them against a
-predefined list of patterns and ISO codes. Supports custom mappings and
-handles aggregate economies.
+predefined list of patterns and ISO codes. Handles aggregate economies.
 }
 \examples{
 \dontrun{
-df <- data.frame(economy = c("Custom Economy", "Alt1"))
-custom_economies <- list(
-  "Custom Economy" = "CST1",
-  "Another Economy" = list(
-    id = "CST2",
-    aliases = c("Alt1", "Alt2")
-  )
-)
-standardize_economy(
-  df, name_col = economy, custom_economies = custom_economies
-)
+df <- data.frame(economy = c("United States", "China"))
+standardize_economy(df, name_col = economy)
 }
 }

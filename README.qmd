@@ -76,32 +76,24 @@ library(econid)
 
 ```{mermaid}
 flowchart TD
-    A[Start: standardize_economy] --> B[Validate Input Data]
-    B --> C[Process Custom Economies]
-    B --> D[Validate Custom Names]
-    C --> E[Convert Names to UTF-8]
-    D --> E
-    E --> F[Map Output Columns]
-    F --> G[Standardize Economies]
-    G --> H{Show Aggregates}
-    H -->|Yes| I[Report Detected Aggregates]
-    H -->|No| J[Prepare Output]
-    I --> J
-    J --> K[Bind with Original Data]
-    K --> L[Return Standardized Data]
-
-    %% Standardize Economies Process
-    G --> M[Apply Custom Names]
-    M --> N[Combine Standard & Custom Patterns]
-    N --> O[Process Each Name]
-    O --> P{Match Found?}
-    P -->|Yes| Q[Store Match Results]
-    P -->|No| R[Store Default Values]
-    Q --> S[Next Name]
-    R --> S
-    S --> T{More Names}
-    T -->|Yes| O
-    T -->|No| U[Identify Unique Aggregates]
+    A[standardize_economy] --> B[Input Validation]
+    B --> C[Convert name column to UTF-8]
+    C --> D[Map output columns]
+    D --> E[Call standardize_economies_impl]
+    E --> F[Initialize results tibble]
+    F --> G[Get economy patterns]
+    G --> H[Process each name]
+    H --> I[Match economy]
+    I --> J{Try regex match}
+    J -->|Match found| K[Return matched economy info]
+    J -->|No match| L[Return default values]
+    K --> M[Store results]
+    L --> M
+    M --> N[Identify aggregates]
+    N --> O[Return standardized data]
+    O --> P[Report aggregates if requested]
+    P --> Q[Prepare final output]
+    Q --> R[Return standardized data frame]
 ```
 
 ### The `standardize_economy()` function
