@@ -1,19 +1,24 @@
 test_that(
   "economy_patterns regex matches historical country names (all cases)", {
-    # Join test_cases and economy_patterns
+    # Join test_cases with additional fields from economy_patterns
     test_cases <- dplyr::left_join(
-      economy_patterns,
       test_cases,
-      by = "economy_name"
-    )
+      economy_patterns,
+      by = c(economy_id = "economy_id", economy_name = "economy_name")
+    ) |>
+      dplyr::select(
+        economy_id, economy_name, economy_regex, iso3c, iso2c, variant_names
+      )
 
     # Iterate over each row in test_cases
     purrr::pwalk(
       test_cases[1:100, ],
-      function(economy_name, economy_regex, iso3c, iso2c, variant_names) {
+      function(
+        economy_id, economy_name, economy_regex, iso3c, iso2c, variant_names
+      ) {
         # Error if any required field is NA or NULL
         if (any(is.na(c(
-          economy_name, economy_regex, iso3c, iso2c, variant_names
+          economy_id, economy_name, economy_regex, iso3c, iso2c, variant_names
         ))) || any(is.null(variant_names))) {
           stop("Missing required fields in test_cases")
         }
