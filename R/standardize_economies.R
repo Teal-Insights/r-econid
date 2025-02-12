@@ -19,6 +19,8 @@ valid_cols <- c(
 #'   "aggregate". Defaults to NA. Will be ignored if output_cols do not
 #'   include "economy_type".
 #' @param warn_ambiguous Logical; whether to warn about ambiguous matches
+#' @param warn_overwrite Logical; whether to warn when overwriting existing
+#'   economy_* columns. Defaults to TRUE.
 #'
 #' @return A data frame with standardized economy information merged with the
 #'   input data
@@ -36,7 +38,9 @@ standardize_economies <- function(
   code_col = NULL,
   output_cols = c("economy_id", "economy_name", "economy_type"),
   default_economy_type = NA_character_,
-  warn_ambiguous = TRUE
+  warn_ambiguous = TRUE,
+  overwrite = TRUE,
+  warn_overwrite = TRUE
 ) {
   # Allow user to use either quoted or unquoted column names
   name_col_expr <- rlang::enquo(name_col)
@@ -51,6 +55,19 @@ standardize_economies <- function(
   } else {
     code_col_name <- NULL
   }
+
+  # Check for existing economy columns
+  existing_cols <- intersect(names(data), output_cols)
+  if (length(existing_cols) > 0) {
+    if (warn_overwrite) {
+      cli::cli_warn(
+        "Overwriting existing economy columns: {.val {existing_cols}}"
+      )
+    }
+  }
+
+  # Remove existing economy columns
+  data <- data[, setdiff(names(data), existing_cols), drop = FALSE]
 
   # Validate inputs
   final_cols <- validate_economy_inputs(
@@ -108,7 +125,8 @@ standardize_economies <- function(
   }
 
   # Reorder the columns to match the output_cols order
-  results <- results[, c(output_cols, setdiff(names(results), output_cols))]
+  selected_cols <- c(output_cols, setdiff(names(results), output_cols))
+  results <- results[, selected_cols]
 
   results
 }

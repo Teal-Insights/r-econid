@@ -260,3 +260,39 @@ test_that("output columns are added in correct order", {
     c("economy_id", "country")
   )
 })
+
+test_that("handles existing economy columns correctly", {
+  # Create test data with existing economy columns
+  df <- data.frame(
+    country = c("USA", "China"),
+    economy_id = c("old_id1", "old_id2"),
+    economy_name = c("Old Name 1", "Old Name 2")
+  )
+
+  # Should warn when warn_overwrite = TRUE
+  expect_warning(
+    standardize_economies(
+      df,
+      name_col = country,
+      warn_overwrite = TRUE
+    ),
+    "Overwriting existing economy columns"
+  )
+
+  # Should not warn when warn_overwrite = FALSE
+  expect_no_warning(
+    standardize_economies(
+      df,
+      name_col = country,
+      warn_overwrite = FALSE
+    )
+  )
+
+  # Should actually overwrite the columns
+  expect_warning(
+    result <- standardize_economies(df, name_col = country),
+    "Overwriting existing economy columns"
+  )
+  expect_false(identical(df$economy_id, result$economy_id))
+  expect_false(identical(df$economy_name, result$economy_name))
+})
