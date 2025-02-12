@@ -14,10 +14,18 @@ Suggests:
     lintr (>= 3.1.2),
     dotenv,
     dplyr,
-    tidyr
+    tidyr,
+    ellmer,
+    purrr,
+    stringr,
+    tibble,
+    renv
 Config/testthat/edition: 3
 URL: https://teal-insights.github.io/r-econid, https://github.com/Teal-Insights/r-econid
 BugReports: https://github.com/Teal-Insights/r-econid/issues
 Depends: 
-    R (>= 2.10)
+    R (>= 4.1.0)
 LazyData: true
+Imports: 
+    cli,
+    rlang

@@ -21,4 +21,4 @@ country_codes[char_cols] <- lapply(country_codes[char_cols], function(col) {
 })
 
 # Save the dataset to an .rda file for export using usethis::use_data
-usethis::use_data(country_codes, overwrite = TRUE)
+usethis::use_data(country_codes, overwrite = TRUE, internal = TRUE)

@@ -1,5 +1,6 @@
+.specstory
 .Rproj.user
 docs
 .env
 data-raw/.csv
-.specstory
+/.quarto/
