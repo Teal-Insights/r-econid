@@ -1,18 +1,6 @@
-# Design suggestion: instead of name_col and code_col, have a single match_on
-# column that takes an ordered vector of column names in the priority order to
-# match on. Indicate in roxygen2 documentation that we recommend iso3c first
-# if available, name second, and that iso2c is also supported.
-#
-# We need to handle the case where the `economy_*` columns already exist in the
-# data.
-#
-# We need to enforce that economy_id output codes are unique, including when
-# the user defines a custom economy and when we copy the code column value over
-# to the economy_id column.
-
 # Define valid output columns
 valid_cols <- c(
-  "economy_name", "economy_type", "economy_id", "iso3c", "iso2c"
+  "economy_id", "economy_name", "economy_type", "iso3c", "iso2c"
 )
 
 #' Standardize Economy Names and Codes
@@ -118,6 +106,9 @@ standardize_economies <- function(
       is.na(results$economy_type)
     ] <- default_economy_type
   }
+
+  # Reorder the columns to match the output_cols order
+  results <- results[, c(output_cols, setdiff(names(results), output_cols))]
 
   results
 }

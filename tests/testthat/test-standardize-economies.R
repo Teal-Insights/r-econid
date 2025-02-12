@@ -213,3 +213,50 @@ test_that("output_cols argument correctly filters columns", {
   # Ensure regex column still excluded
   expect_false("economy_regex" %in% names(result_all))
 })
+
+test_that("output columns are added in correct order", {
+  test_df <- tibble::tribble(
+    ~country,
+    "United States",
+    "France"
+  )
+
+  # Test with specific output columns
+  result <- standardize_economies(
+    test_df,
+    name_col = country,
+    output_cols = c("economy_id", "economy_name", "economy_type")
+  )
+
+  # Verify new columns are added to the left in specified order
+  expect_equal(
+    names(result),
+    c("economy_id", "economy_name", "economy_type", "country")
+  )
+
+  # Test with different order
+  result_reversed <- standardize_economies(
+    test_df,
+    name_col = country,
+    output_cols = c("economy_type", "economy_name", "economy_id")
+  )
+
+  # Verify new columns are added to the left in specified order
+  expect_equal(
+    names(result_reversed),
+    c("economy_type", "economy_name", "economy_id", "country")
+  )
+
+  # Test with single output column
+  result_single <- standardize_economies(
+    test_df,
+    name_col = country,
+    output_cols = "economy_id"
+  )
+
+  # Verify single column is added to the left
+  expect_equal(
+    names(result_single),
+    c("economy_id", "country")
+  )
+})
