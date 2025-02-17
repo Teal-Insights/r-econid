@@ -1,35 +1,38 @@
-# Design notes:
-#
-# When allowing users to extend the economy_patterns with custom patterns, we
-# should let them do it once at the top of their script rather than as a
-# argument. Also may want to allow custom regex rather than always construct
-# it programmatically.
-
 #' Create Economy Name Regex Pattern
 #'
 #' @description
-#' Creates a regular expression pattern from an economy name, following
-#' standardized rules for flexible matching. This function converts the input
-#' name to lowercase, escapes special regex characters, and replaces spaces
-#' with a flexible whitespace pattern (`.?`).
+#' Creates a regular expression pattern from one or more economy names,
+#' following standardized rules for flexible matching. The function converts
+#' each input name to lowercase, escapes special regex characters, and replaces
+#' spaces with a flexible whitespace pattern (`.?`). The individual patterns
+#' are then joined with the pipe operator (`|`) to produce a regex that matches
+#' any of the supplied names.
 #'
-#' @param name Character string containing the economy name.
+#' @param names A character vector of economy names.
 #'
-#' @return Character string containing the regex pattern.
+#' @return A character string containing the combined regex pattern.
 #'
 #' @keywords internal
-create_economy_regex <- function(name) {
-  # Helper to create regex pattern from name
-  # Converts name to regex pattern following our standard approach
+create_economy_regex <- function(names) {
+  if (!is.character(names)) {
+    stop("`names` must be a character vector.", call. = FALSE)
+  }
 
-  # Convert to lowercase
-  pattern <- tolower(name)
+  # Process each name individually
+  patterns <- vapply(names, function(name) {
+    # Convert to lowercase
+    pattern <- tolower(name)
 
-  # Escape special regex characters
-  pattern <- gsub("([.|()\\^{}+$*?])", "\\\\\\1", pattern)
+    # Escape special regex characters
+    pattern <- gsub("([.|()\\^{}+$*?])", "\\\\\\1", pattern)
 
-  # Replace spaces with flexible whitespace pattern
-  pattern <- gsub("\\s+", ".?", pattern)
+    # Replace spaces with flexible whitespace pattern
+    pattern <- gsub("\\s+", ".?", pattern)
 
-  pattern
+    pattern
+  }, FUN.VALUE = character(1))
+
+  # Join individual patterns with pipe to create an "or" regex pattern
+  combined_pattern <- paste(patterns, collapse = "|")
+  combined_pattern
 }
