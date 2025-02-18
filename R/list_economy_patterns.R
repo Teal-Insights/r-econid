@@ -1,7 +1,9 @@
 #' List economy patterns
 #'
 #' This function returns a tibble containing regular expression patterns for
-#' identifying economic indicators.
+#' identifying economic indicators. It combines the patterns from the built-in
+#' \code{economy_patterns} dataset with any custom patterns stored in the
+#' \code{.econid_env} environment.
 #'
 #' @return A data frame with the following columns:
 #' \describe{
@@ -17,5 +19,7 @@
 #' @export
 #' @keywords internal
 list_economy_patterns <- function() {
-  return(get0("economy_patterns", envir = asNamespace("econid")))
+  builtin <- get0("economy_patterns", envir = asNamespace("econid"))
+  custom  <- .econid_env$custom_economy_patterns
+  dplyr::bind_rows(builtin, custom)
 }
