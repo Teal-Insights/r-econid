@@ -17,5 +17,5 @@
 #' @export
 #' @keywords internal
 list_economy_patterns <- function() {
-  return(get0("economy_patterns", envir = asNamespace("econid")))
+  get0("economy_patterns", envir = asNamespace("econid"))
 }
