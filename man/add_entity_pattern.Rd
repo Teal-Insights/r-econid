@@ -17,8 +17,8 @@ add_entity_pattern(
 
 \item{entity_name}{The standard (canonical) name of the entity.}
 
-\item{entity_type}{A character string describing the type of entity (e.g.,
-"country", "region").}
+\item{entity_type}{A character string describing the type of entity
+("economy", "organization", "aggregate", or "other").}
 
 \item{aliases}{An optional character vector of alternative names identifying
 the entity. If provided, these are automatically combined (using the pipe

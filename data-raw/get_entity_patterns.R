@@ -1379,9 +1379,9 @@ entity_patterns <- tibble::tribble(
 entity_patterns <- entity_patterns |>
   dplyr::mutate(entity_id = iso3c)
 
-# Add an entity_type column to the tibble with "country" as the type
+# Add an entity_type column to the tibble with "economy" as the type
 entity_patterns <- entity_patterns |>
-  dplyr::mutate(entity_type = "country")
+  dplyr::mutate(entity_type = "economy")
 
 entity_patterns <- entity_patterns |>
   dplyr::select(

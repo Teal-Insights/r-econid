@@ -11,8 +11,8 @@
 #'
 #' @param entity_id A unique identifier for the entity.
 #' @param entity_name The standard (canonical) name of the entity.
-#' @param entity_type A character string describing the type of entity (e.g.,
-#'   "country", "region").
+#' @param entity_type A character string describing the type of entity
+#'   ("economy", "organization", "aggregate", or "other").
 #' @param aliases An optional character vector of alternative names identifying
 #'   the entity. If provided, these are automatically combined (using the pipe
 #'   operator, "|") with \code{entity_name} and \code{entity_id} to construct

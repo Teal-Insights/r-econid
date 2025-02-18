@@ -18,7 +18,7 @@ test_that("adds default alias when no aliases are provided", {
   add_entity_pattern(
     entity_id = 1,
     entity_name = "Testland",
-    entity_type = "developed",
+    entity_type = "economy",
     aliases = NULL,
     entity_regex = NULL
   )
@@ -28,7 +28,7 @@ test_that("adds default alias when no aliases are provided", {
   expect_equal(nrow(cp), 1)
   expect_equal(cp$entity_id[1], "1")
   expect_equal(cp$entity_name[1], "Testland")
-  expect_equal(cp$entity_type[1], "developed")
+  expect_equal(cp$entity_type[1], "economy")
   expect_equal(cp$entity_regex[1], expected_regex)
 })
 
@@ -49,7 +49,7 @@ test_that("custom entity_regex overrides generated value", {
   add_entity_pattern(
     entity_id = 2,
     entity_name = "Testonia",
-    entity_type = "emerging",
+    entity_type = "economy",
     aliases = c("alias1", "alias2"),
     entity_regex = custom_regex
   )
@@ -77,7 +77,7 @@ test_that("uses provided aliases to create regex", {
   add_entity_pattern(
     entity_id = 3,
     entity_name = "Econia",
-    entity_type = "developing",
+    entity_type = "economy",
     aliases = c("alias1", "alias2"),
     entity_regex = NULL
   )
@@ -99,7 +99,7 @@ test_that("multiple invocations are cumulative and in order", {
   add_entity_pattern(
     entity_id = 1,
     entity_name = "Country1",
-    entity_type = "Type1",
+    entity_type = "economy",
     aliases = NULL,
     entity_regex = NULL
   )
@@ -109,7 +109,7 @@ test_that("multiple invocations are cumulative and in order", {
   add_entity_pattern(
     entity_id = 2,
     entity_name = "Country2",
-    entity_type = "Type2",
+    entity_type = "economy",
     aliases = c("x", "y"),
     entity_regex = custom_regex
   )
@@ -126,7 +126,7 @@ test_that("internal environment and table are created if missing", {
 
   entity_id   <- 4
   entity_name <- "Newland"
-  entity_type <- "developing"
+  entity_type <- "economy"
 
   # In this test, we simply use a mock that returns the entity name.
   local_mocked_bindings(
@@ -162,7 +162,7 @@ test_that("returns invisible NULL", {
     add_entity_pattern(
       entity_id = 5,
       entity_name = "InvisibleLand",
-      entity_type = "TypeX",
+      entity_type = "economy",
       aliases = NULL,
       entity_regex = NULL
     )

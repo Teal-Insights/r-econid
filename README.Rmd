@@ -132,7 +132,7 @@ standardize_entities(
   A data frame (or tibble) containing the entities to be standardized.
 
 - **name_col**  
-  The unquoted or quoted name of the column in `data` that contains the country or entity names.
+  The unquoted or quoted name of the column in `data` that contains the entity names to be standardized.
 
 - **code_col** *(optional)*  
   An additional column name that might contain ISO or custom codes. When present, the function attempts to match on both this code and the name. If both match, a warning about ambiguity is issued.
@@ -148,7 +148,12 @@ standardize_entities(
   Defaults to `c("entity_id", "entity_name", "entity_type")`.
 
 - **default_entity_type** *(optional)*  
-  A character scalar (`"country"`, `"institution"`, or `"aggregate"`, etc.) to assign as the entity type where no match is found. This value only applies if `"entity_type"` is requested in `output_cols`.
+  A character scalar (`"economy"`, `"organization"`, `"aggregate"`, or `"other"`) to assign as the entity type where no match is found. This value only applies if `"entity_type"` is requested in `output_cols`. The four valid values were selected to cover the most common economic use cases:
+
+  - `"economy"`: A legal or quasi-legal jurisdiction such as a country or autonomous region (e.g., "United States", "Democratic Autonomous Administration of North and East Syria")
+  - `"organization"`: An institution or organization such as a bank or international agency (e.g., "World Bank", "IMF")
+  - `"aggregate"`: A geographic or economic aggregate such as a region or development group (e.g., "Sub-Saharan Africa", "Low Income Countries")
+  - `"other"`: Anything that doesn't fit into the other categories (e.g., "Elon Musk", "The Moon")
 
 - **warn_ambiguous** *(optional)*  
   A logical indicating whether to warn if a single row in `data` can match more than one entity. Defaults to `TRUE`.
@@ -165,7 +170,7 @@ The `add_entity_pattern()` function allows you to add custom entity patterns to 
 add_entity_pattern(
   "BJ-CITY",
   "Beijing City",
-  entity_type = "other",
+  entity_type = "economy",
   aliases = c("Beijing Municipality")
 )
 
@@ -175,8 +180,3 @@ print(result_custom)
 ```
 
 Use these patterns to explore the package and integrate it into your data cleaning workflows. For finer-grained operations (e.g., fuzzy matching or custom expansions), keep an eye on the package roadmap for future enhancements. We welcome your feedback and contributions!
-
-## Roadmap
-
-- Add a fuzzy join function
-- Add a fuzzy filter function

@@ -23,12 +23,14 @@ standardize_entities(
 \item{code_col}{Optional name of the column containing entity codes}
 
 \item{output_cols}{Character vector specifying desired output columns.
-Options are "entity_name", "entity_id", "entity_type", "iso3c", "iso2c"}
+Options are "entity_name", "entity_id", "entity_type", "iso3c", "iso2c".
+Defaults to c("entity_id", "entity_name", "entity_type").}
 
-\item{default_entity_type}{Character; the default entity type to use if not
-specified in the data. Options are "country", "institution", or
-"aggregate". Defaults to NA. Will be ignored if output_cols do not
-include "entity_type".}
+\item{default_entity_type}{Character; the default entity type to use for
+entities that do not match any of the patterns. Options are "economy",
+"organization", "aggregate", or "other". If this argument is not supplied,
+the default value will be NA_character_. Argument will be ignored if
+output_cols do not include "entity_type".}
 
 \item{warn_ambiguous}{Logical; whether to warn about ambiguous matches}
 
