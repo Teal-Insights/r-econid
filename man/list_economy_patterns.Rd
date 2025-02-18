@@ -17,7 +17,9 @@ A data frame with the following columns:
 }
 \description{
 This function returns a tibble containing regular expression patterns for
-identifying economic indicators.
+identifying economic indicators. It combines the patterns from the built-in
+\code{economy_patterns} dataset with any custom patterns stored in the
+\code{.econid_env} environment.
 }
 \examples{
 patterns <- list_economy_patterns()

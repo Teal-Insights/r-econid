@@ -19,6 +19,7 @@ valid_cols <- c(
 #'   "aggregate". Defaults to NA. Will be ignored if output_cols do not
 #'   include "economy_type".
 #' @param warn_ambiguous Logical; whether to warn about ambiguous matches
+#' @param overwrite Logical; whether to overwrite existing economy_* columns
 #' @param warn_overwrite Logical; whether to warn when overwriting existing
 #'   economy_* columns. Defaults to TRUE.
 #'

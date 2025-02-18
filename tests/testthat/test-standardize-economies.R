@@ -116,7 +116,7 @@ test_that("match_economy_ids warns on ambiguous matches", {
       if (name == "Ambiguous Country") {
         return(c("CTY1", "CTY2"))
       }
-      return("UNIQUE")
+      "UNIQUE"
     }
   )
 
