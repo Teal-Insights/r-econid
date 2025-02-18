@@ -1,5 +1,5 @@
-economy_patterns <- tibble::tribble(
-  ~economy_name, ~economy_regex, ~iso3c, ~iso2c,
+entity_patterns <- tibble::tribble(
+  ~entity_name, ~entity_regex, ~iso3c, ~iso2c,
 
   "Afghanistan", paste0(
     "afghan|", # base name
@@ -1375,22 +1375,22 @@ economy_patterns <- tibble::tribble(
   ), "ALA", "AX"
 )
 
-# Add an economy_id column to the tibble with iso3c as the id
-economy_patterns <- economy_patterns %>%
-  dplyr::mutate(economy_id = iso3c)
+# Add an entity_id column to the tibble with iso3c as the id
+entity_patterns <- entity_patterns |>
+  dplyr::mutate(entity_id = iso3c)
 
-# Add an economy_type column to the tibble with "country" as the type
-economy_patterns <- economy_patterns %>%
-  dplyr::mutate(economy_type = "country")
+# Add an entity_type column to the tibble with "country" as the type
+entity_patterns <- entity_patterns |>
+  dplyr::mutate(entity_type = "country")
 
-economy_patterns <- economy_patterns %>%
+entity_patterns <- entity_patterns |>
   dplyr::select(
-    economy_id, economy_name, iso3c, iso2c, economy_type, economy_regex
+    entity_id, entity_name, iso3c, iso2c, entity_type, entity_regex
   )
 
 # Save data --------------------------------------------------------------
 
 usethis::use_data(
-  economy_patterns,
+  entity_patterns,
   overwrite = TRUE
 )

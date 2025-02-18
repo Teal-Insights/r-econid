@@ -1,44 +1,44 @@
 # Define valid output columns
 valid_cols <- c(
-  "economy_id", "economy_name", "economy_type", "iso3c", "iso2c"
+  "entity_id", "entity_name", "entity_type", "iso3c", "iso2c"
 )
 
-#' Standardize Economy Names and Codes
+#' Standardize entity Names and Codes
 #'
 #' @description
-#' Standardizes economy names and codes in a dataset by matching them against a
-#' predefined list of patterns and ISO codes. Handles aggregate economies.
+#' Standardizes entity names and codes in a dataset by matching them against a
+#' predefined list of patterns and ISO codes. Handles aggregate entities.
 #'
-#' @param data A data frame or tibble containing economy names to standardize
-#' @param name_col Name of the column containing economy names
-#' @param code_col Optional name of the column containing economy codes
+#' @param data A data frame or tibble containing entity names to standardize
+#' @param name_col Name of the column containing entity names
+#' @param code_col Optional name of the column containing entity codes
 #' @param output_cols Character vector specifying desired output columns.
-#'   Options are "economy_name", "economy_id", "economy_type", "iso3c", "iso2c"
-#' @param default_economy_type Character; the default economy type to use if not
+#'   Options are "entity_name", "entity_id", "entity_type", "iso3c", "iso2c"
+#' @param default_entity_type Character; the default entity type to use if not
 #'   specified in the data. Options are "country", "institution", or
 #'   "aggregate". Defaults to NA. Will be ignored if output_cols do not
-#'   include "economy_type".
+#'   include "entity_type".
 #' @param warn_ambiguous Logical; whether to warn about ambiguous matches
-#' @param overwrite Logical; whether to overwrite existing economy_* columns
+#' @param overwrite Logical; whether to overwrite existing entity_* columns
 #' @param warn_overwrite Logical; whether to warn when overwriting existing
-#'   economy_* columns. Defaults to TRUE.
+#'   entity_* columns. Defaults to TRUE.
 #'
-#' @return A data frame with standardized economy information merged with the
+#' @return A data frame with standardized entity information merged with the
 #'   input data
 #'
 #' @examples
 #' \dontrun{
-#' df <- data.frame(economy = c("United States", "China"))
-#' standardize_economy(df, name_col = economy)
+#' df <- data.frame(entity = c("United States", "China"))
+#' standardize_entity(df, name_col = entity)
 #' }
 #'
 #' @export
-standardize_economies <- function(
+standardize_entities <- function(
   data,
   name_col,
   code_col = NULL,
-  output_cols = c("economy_id", "economy_name", "economy_type"),
-  default_economy_type = NA_character_,
+  output_cols = c("entity_id", "entity_name", "entity_type"),
+  default_entity_type = NA_character_,
   warn_ambiguous = TRUE,
   overwrite = TRUE,
   warn_overwrite = TRUE
@@ -57,21 +57,21 @@ standardize_economies <- function(
     code_col_name <- NULL
   }
 
-  # Check for existing economy columns
+  # Check for existing entity columns
   existing_cols <- intersect(names(data), output_cols)
   if (length(existing_cols) > 0) {
     if (warn_overwrite) {
       cli::cli_warn(
-        "Overwriting existing economy columns: {.val {existing_cols}}"
+        "Overwriting existing entity columns: {.val {existing_cols}}"
       )
     }
   }
 
-  # Remove existing economy columns
+  # Remove existing entity columns
   data <- data[, setdiff(names(data), existing_cols), drop = FALSE]
 
   # Validate inputs
-  final_cols <- validate_economy_inputs(
+  final_cols <- validate_entity_inputs(
     data,
     name_col_name,
     code_col_name,
@@ -81,48 +81,48 @@ standardize_economies <- function(
   # Convert name column to character UTF-8
   data[[name_col_name]] <- enc2utf8(as.character(data[[name_col_name]]))
 
-  # Use regex match to add a column of economy_ids to the data
+  # Use regex match to add a column of entity_ids to the data
   data <- data |>
-    dplyr::mutate(economy_id = match_economy_ids(
+    dplyr::mutate(entity_id = match_entity_ids(
       names = data[[name_col_name]],
       codes = if (!is.null(code_col_name)) data[[code_col_name]] else NULL,
       warn_ambiguous = warn_ambiguous
     ))
 
-  # Join economy_patterns to the input data
+  # Join entity_patterns to the input data
   results <- dplyr::left_join(
     data,
-    list_economy_patterns(),
-    by = c(economy_id = "economy_id")
+    list_entity_patterns(),
+    by = c(entity_id = "entity_id")
   )
 
   # Drop any valid_cols not in the final_cols
-  difference <- setdiff(c(valid_cols, "economy_regex"), final_cols)
+  difference <- setdiff(c(valid_cols, "entity_regex"), final_cols)
   results <- results[, !(names(results) %in% difference)]
 
-  # Replace any NA values in economy_name with the value in name_col
-  if ("economy_name" %in% final_cols) {
-    results$economy_name[
-      is.na(results$economy_name)
+  # Replace any NA values in entity_name with the value in name_col
+  if ("entity_name" %in% final_cols) {
+    results$entity_name[
+      is.na(results$entity_name)
     ] <- data[[name_col_name]][
-      is.na(results$economy_name)
+      is.na(results$entity_name)
     ]
   }
 
-  # Replace any NA values in economy_id with the value in code_col
-  if (!is.null(code_col_name) && "economy_id" %in% final_cols) {
-    results$economy_id[
-      is.na(results$economy_id)
+  # Replace any NA values in entity_id with the value in code_col
+  if (!is.null(code_col_name) && "entity_id" %in% final_cols) {
+    results$entity_id[
+      is.na(results$entity_id)
     ] <- data[[code_col_name]][
-      is.na(results$economy_id)
+      is.na(results$entity_id)
     ]
   }
 
-  # Replace any NA values in economy_type with the default_economy_type
-  if ("economy_type" %in% final_cols) {
-    results$economy_type[
-      is.na(results$economy_type)
-    ] <- default_economy_type
+  # Replace any NA values in entity_type with the default_entity_type
+  if ("entity_type" %in% final_cols) {
+    results$entity_type[
+      is.na(results$entity_type)
+    ] <- default_entity_type
   }
 
   # Reorder the columns to match the output_cols order
@@ -132,20 +132,20 @@ standardize_economies <- function(
   results
 }
 
-#' Validate inputs for economy standardization
+#' Validate inputs for entity standardization
 #'
 #' @description
-#' Validates the input data frame and column names for economy standardization.
+#' Validates the input data frame and column names for entity standardization.
 #'
 #' @param data A data frame or tibble to validate
-#' @param name_col_name Name of the column containing economy names
-#' @param code_col_name Optional name of the column containing economy codes
+#' @param name_col_name Name of the column containing entity names
+#' @param code_col_name Optional name of the column containing entity codes
 #' @param output_cols Character vector of requested output columns
 #'
 #' @return List containing validated output_cols and final_cols
 #'
 #' @keywords internal
-validate_economy_inputs <- function(
+validate_entity_inputs <- function(
   data,
   name_col_name,
   code_col_name,
@@ -174,20 +174,20 @@ validate_economy_inputs <- function(
   output_cols
 }
 
-#' Match Economy Ids
+#' Match entity Ids
 #'
 #' @description
 #' Given vectors of names and codes, match them against a list of patterns and
-#' return a vector of economy ids.
+#' return a vector of entity ids.
 #'
-#' @param names Character vector of economy names to standardize
-#' @param codes Optional character vector of economy codes
+#' @param names Character vector of entity names to standardize
+#' @param codes Optional character vector of entity codes
 #' @param warn_ambiguous Logical; whether to warn about ambiguous matches
 #'
-#' @return A vector of economy ids
+#' @return A vector of entity ids
 #'
 #' @keywords internal
-match_economy_ids <- function(
+match_entity_ids <- function(
   names,
   codes = NULL,
   warn_ambiguous = TRUE
@@ -238,16 +238,16 @@ match_economy_ids <- function(
 #' Try Regex Pattern Match
 #'
 #' @description
-#' Attempts to match a string and return matching economy_id(s) using regex
-#' patterns from economy_patterns.
+#' Attempts to match a string and return matching entity_id(s) using regex
+#' patterns from entity_patterns.
 #'
-#' @param name Character string of economy name or code
+#' @param name Character string of entity name or code
 #'
-#' @return Character vector of economy_ids
+#' @return Character vector of entity_ids
 #'
 #' @keywords internal
 try_regex_match <- function(name) {
-  patterns <- list_economy_patterns()
+  patterns <- list_entity_patterns()
 
   grepl_mask <- function(pattern, x) {
     grepl(pattern, x, ignore.case = TRUE, perl = TRUE)
@@ -255,14 +255,14 @@ try_regex_match <- function(name) {
 
   # Get a boolean vector of which regex patterns match the name
   matches_case_insensitive <- vapply(
-    patterns$economy_regex,
+    patterns$entity_regex,
     grepl_mask,
     x = name,
     FUN.VALUE = logical(1)
   )
 
-  # Return the economy_ids of the patterns that match the name
-  patterns$economy_id[
+  # Return the entity_ids of the patterns that match the name
+  patterns$entity_id[
     matches_case_insensitive
   ]
 }
