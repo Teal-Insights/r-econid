@@ -7,12 +7,12 @@ utils::globalVariables(c(".econid_env"))
 
 .onLoad <- function(libname, pkgname) {
   # You can optionally initialize the custom patterns tibble here
-  .econid_env$custom_economy_patterns <- tibble::tibble(
-    economy_id    = character(),
-    economy_name  = character(),
+  .econid_env$custom_entity_patterns <- tibble::tibble(
+    entity_id    = character(),
+    entity_name  = character(),
     iso3c         = character(),
     iso2c         = character(),
-    economy_type  = character(),
-    economy_regex = character()
+    entity_type  = character(),
+    entity_regex = character()
   )
 }

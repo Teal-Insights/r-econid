@@ -1,6 +1,6 @@
 dotenv::load_dot_env()
 
-system_patterns <- economy_patterns
+system_patterns <- entity_patterns
 
 parse_deepseek_response <- function(response) {
   # Remove "```json" and "```"
@@ -39,11 +39,11 @@ parse_deepseek_response <- function(response) {
   })
 }
 
-get_variant_names <- function(economy_name, iso3c, iso2c) {
+get_variant_names <- function(entity_name, iso3c, iso2c) {
   # Prompt DeepSeek to return a JSON array of the variant names
   prompt <- paste0(
-    "Return a JSON array of the variant names for a given economy. ",
-    "You will be given the economy name, ISO3 code, and ISO2 code. ",
+    "Return a JSON array of the variant names for a given entity. ",
+    "You will be given the entity name, ISO3 code, and ISO2 code. ",
     "Variants should include all names for the nation that might appear in ",
     "standard economic data sets from institutions like the World Bank, ",
     "IMF, etc. dating back to the mid-20th century. The goal is to generate ",
@@ -80,7 +80,7 @@ get_variant_names <- function(economy_name, iso3c, iso2c) {
   )
 
   deepseek_result <- chat$chat(paste0(
-    "Input: \"", economy_name, "\", \"", iso3c, "\", \"", iso2c, "\"."
+    "Input: \"", entity_name, "\", \"", iso3c, "\", \"", iso2c, "\"."
   ))
 
   parsed_result <- parse_deepseek_response(deepseek_result)
@@ -90,7 +90,7 @@ get_variant_names <- function(economy_name, iso3c, iso2c) {
 
 # Create a lookup table of existing variant names
 existing_variants <- test_cases |>
-  dplyr::select(economy_name, variant_names) |>
+  dplyr::select(entity_name, variant_names) |>
   dplyr::filter(lengths(variant_names) > 0)
 
 # test_cases generation with option to update all or just missing
@@ -98,25 +98,25 @@ get_test_cases <- function(update_all = FALSE) {
   purrr::pmap_dfr(
     system_patterns,
     function(
-      economy_id, economy_name, iso3c, iso2c, economy_regex, economy_type
+      entity_id, entity_name, iso3c, iso2c, entity_regex, entity_type
     ) {
-      # Check if we already have variants for this economy
-      if (!update_all && economy_id %in% existing_variants$economy_id) {
+      # Check if we already have variants for this entity
+      if (!update_all && entity_id %in% existing_variants$entity_id) {
         # Use existing variants
         existing_row <- existing_variants |>
-          dplyr::filter(economy_id == !!economy_id)
+          dplyr::filter(entity_id == !!entity_id)
         return(tibble::tibble(
-          economy_id = economy_id,
-          economy_name = economy_name,
+          entity_id = entity_id,
+          entity_name = entity_name,
           variant_names = existing_row$variant_names
         ))
       }
 
-      # Make API request for new economies (or when update_all is TRUE)
-      variant_names <- get_variant_names(economy_name, iso3c, iso2c)
+      # Make API request for new entities (or when update_all is TRUE)
+      variant_names <- get_variant_names(entity_name, iso3c, iso2c)
       tibble::tibble(
-        economy_id = economy_id,
-        economy_name = economy_name,
+        entity_id = entity_id,
+        entity_name = entity_name,
         variant_names = list(variant_names)
       )
     }
@@ -127,24 +127,24 @@ get_test_cases <- function(update_all = FALSE) {
 test_cases <- get_test_cases(update_all = FALSE)
 
 # Manual fixup
-test_cases$variant_names[[which(test_cases$economy_name == "Argentina")]] <-
-  test_cases$variant_names[[which(test_cases$economy_name == "Argentina")]][
+test_cases$variant_names[[which(test_cases$entity_name == "Argentina")]] <-
+  test_cases$variant_names[[which(test_cases$entity_name == "Argentina")]][
     test_cases$variant_names[[
-      which(test_cases$economy_name == "Argentina")
+      which(test_cases$entity_name == "Argentina")
     ]] != "United Provinces of South America"
   ]
 
-test_cases$variant_names[[which(test_cases$economy_name == "Armenia")]] <-
-  test_cases$variant_names[[which(test_cases$economy_name == "Armenia")]][
+test_cases$variant_names[[which(test_cases$entity_name == "Armenia")]] <-
+  test_cases$variant_names[[which(test_cases$entity_name == "Armenia")]][
     test_cases$variant_names[[
-      which(test_cases$economy_name == "Armenia")
+      which(test_cases$entity_name == "Armenia")
     ]] != "Transcaucasian Socialist Federative Soviet Republic"
   ]
 
-test_cases$variant_names[[which(test_cases$economy_name == "Australia")]] <-
-  test_cases$variant_names[[which(test_cases$economy_name == "Australia")]][
+test_cases$variant_names[[which(test_cases$entity_name == "Australia")]] <-
+  test_cases$variant_names[[which(test_cases$entity_name == "Australia")]][
     !test_cases$variant_names[[
-      which(test_cases$economy_name == "Australia")
+      which(test_cases$entity_name == "Australia")
     ]] %in% c(
       "Colony of Queensland",
       "Colony of New South Wales",
@@ -154,48 +154,48 @@ test_cases$variant_names[[which(test_cases$economy_name == "Australia")]] <-
     )
   ]
 
-test_cases$variant_names[[which(test_cases$economy_name == "China")]] <-
-  test_cases$variant_names[[which(test_cases$economy_name == "China")]][
+test_cases$variant_names[[which(test_cases$entity_name == "China")]] <-
+  test_cases$variant_names[[which(test_cases$entity_name == "China")]][
     !test_cases$variant_names[[
-      which(test_cases$economy_name == "China")
+      which(test_cases$entity_name == "China")
     ]] %in% c(
       "Republic of China",
       "ROC"
     )
   ]
 
-test_cases$variant_names[[which(test_cases$economy_name == "Colombia")]] <-
-  test_cases$variant_names[[which(test_cases$economy_name == "Colombia")]][
+test_cases$variant_names[[which(test_cases$entity_name == "Colombia")]] <-
+  test_cases$variant_names[[which(test_cases$entity_name == "Colombia")]][
     !grepl("Granad", test_cases$variant_names[[
-      which(test_cases$economy_name == "Colombia")
+      which(test_cases$entity_name == "Colombia")
     ]])
   ]
 
-test_cases$variant_names[[which(test_cases$economy_name == "Czechia")]] <-
-  test_cases$variant_names[[which(test_cases$economy_name == "Czechia")]][
+test_cases$variant_names[[which(test_cases$entity_name == "Czechia")]] <-
+  test_cases$variant_names[[which(test_cases$entity_name == "Czechia")]][
     !grepl("Czechoslovak|Federative|Socialist", test_cases$variant_names[[
-      which(test_cases$economy_name == "Czechia")
+      which(test_cases$entity_name == "Czechia")
     ]])
   ]
 
-test_cases$variant_names[[which(test_cases$economy_name == "Egypt")]] <-
-  test_cases$variant_names[[which(test_cases$economy_name == "Egypt")]][
+test_cases$variant_names[[which(test_cases$entity_name == "Egypt")]] <-
+  test_cases$variant_names[[which(test_cases$entity_name == "Egypt")]][
     test_cases$variant_names[[
-      which(test_cases$economy_name == "Egypt")
+      which(test_cases$entity_name == "Egypt")
     ]] != "United Arab Republic"
   ]
 
-test_cases$variant_names[[which(test_cases$economy_name == "Ethiopia")]] <-
-  test_cases$variant_names[[which(test_cases$economy_name == "Ethiopia")]][
+test_cases$variant_names[[which(test_cases$entity_name == "Ethiopia")]] <-
+  test_cases$variant_names[[which(test_cases$entity_name == "Ethiopia")]][
     test_cases$variant_names[[
-      which(test_cases$economy_name == "Ethiopia")
+      which(test_cases$entity_name == "Ethiopia")
     ]] != "Derg"
   ]
 
-test_cases$variant_names[[which(test_cases$economy_name == "Germany")]] <-
-  test_cases$variant_names[[which(test_cases$economy_name == "Germany")]][
+test_cases$variant_names[[which(test_cases$entity_name == "Germany")]] <-
+  test_cases$variant_names[[which(test_cases$entity_name == "Germany")]][
     !test_cases$variant_names[[
-      which(test_cases$economy_name == "Germany")
+      which(test_cases$entity_name == "Germany")
     ]] %in% c(
       "East Germany",
       "German Democratic Republic",
@@ -205,17 +205,17 @@ test_cases$variant_names[[which(test_cases$economy_name == "Germany")]] <-
     )
   ]
 
-test_cases$variant_names[[which(test_cases$economy_name == "Greece")]] <-
-  test_cases$variant_names[[which(test_cases$economy_name == "Greece")]][
+test_cases$variant_names[[which(test_cases$entity_name == "Greece")]] <-
+  test_cases$variant_names[[which(test_cases$entity_name == "Greece")]][
     test_cases$variant_names[[
-      which(test_cases$economy_name == "Greece")
+      which(test_cases$entity_name == "Greece")
     ]] != "Military Junta"
   ]
 
-test_cases$variant_names[[which(test_cases$economy_name == "Hungary")]] <-
-  test_cases$variant_names[[which(test_cases$economy_name == "Hungary")]][
+test_cases$variant_names[[which(test_cases$entity_name == "Hungary")]] <-
+  test_cases$variant_names[[which(test_cases$entity_name == "Hungary")]][
     !test_cases$variant_names[[
-      which(test_cases$economy_name == "Hungary")
+      which(test_cases$entity_name == "Hungary")
     ]] %in% c(
       "Austria-Hungary",
       "Hungarian People's Republic",
@@ -224,35 +224,35 @@ test_cases$variant_names[[which(test_cases$economy_name == "Hungary")]] <-
     )
   ]
 
-test_cases$variant_names[[which(test_cases$economy_name == "Indonesia")]] <-
-  test_cases$variant_names[[which(test_cases$economy_name == "Indonesia")]][
+test_cases$variant_names[[which(test_cases$entity_name == "Indonesia")]] <-
+  test_cases$variant_names[[which(test_cases$entity_name == "Indonesia")]][
     !test_cases$variant_names[[
-      which(test_cases$economy_name == "Indonesia")
+      which(test_cases$entity_name == "Indonesia")
     ]] %in% c(
       "Dutch East Indies"
     )
   ]
 
-test_cases$variant_names[[which(test_cases$economy_name == "Iran")]] <-
-  test_cases$variant_names[[which(test_cases$economy_name == "Iran")]][
+test_cases$variant_names[[which(test_cases$entity_name == "Iran")]] <-
+  test_cases$variant_names[[which(test_cases$entity_name == "Iran")]][
     !test_cases$variant_names[[
-      which(test_cases$economy_name == "Iran")
+      which(test_cases$entity_name == "Iran")
     ]] %in% c(
       "Pahlavi dynasty"
     )
   ]
 
-test_cases$variant_names[[which(test_cases$economy_name == "Ireland")]] <-
-  test_cases$variant_names[[which(test_cases$economy_name == "Ireland")]][
+test_cases$variant_names[[which(test_cases$entity_name == "Ireland")]] <-
+  test_cases$variant_names[[which(test_cases$entity_name == "Ireland")]][
     !test_cases$variant_names[[
-      which(test_cases$economy_name == "Ireland")
+      which(test_cases$entity_name == "Ireland")
     ]] %in% c(
       "Irish Free State"
     )
   ]
 
-# Join with economy_patterns to get economy_id
+# Join with entity_patterns to get entity_id
 test_cases <- test_cases |>
-  dplyr::select(economy_id, economy_name, variant_names)
+  dplyr::select(entity_id, entity_name, variant_names)
 
 usethis::use_data(test_cases, overwrite = TRUE, internal = TRUE)

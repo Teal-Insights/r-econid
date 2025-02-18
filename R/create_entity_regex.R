@@ -1,19 +1,19 @@
-#' Create Economy Name Regex Pattern
+#' Create entity Name Regex Pattern
 #'
 #' @description
-#' Creates a regular expression pattern from one or more economy names,
+#' Creates a regular expression pattern from one or more entity names,
 #' following standardized rules for flexible matching. The function converts
 #' each input name to lowercase, escapes special regex characters, and replaces
 #' spaces with a flexible whitespace pattern (`.?`). The individual patterns
 #' are then joined with the pipe operator (`|`) to produce a regex that matches
 #' any of the supplied names.
 #'
-#' @param names A character vector of economy names.
+#' @param names A character vector of entity names.
 #'
 #' @return A character string containing the combined regex pattern.
 #'
 #' @keywords internal
-create_economy_regex <- function(names) {
+create_entity_regex <- function(names) {
   if (!is.character(names)) {
     stop("`names` must be a character vector.", call. = FALSE)
   }
