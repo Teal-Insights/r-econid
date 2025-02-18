@@ -1,5 +1,7 @@
 # zzz.R
 
+utils::globalVariables(c(".econid_env"))
+
 # This will be a private environment where you store your session-specific data
 .econid_env <- new.env(parent = emptyenv())
 

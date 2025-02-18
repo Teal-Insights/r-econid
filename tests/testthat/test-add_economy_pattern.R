@@ -10,7 +10,7 @@ test_that("adds default alias when no aliases are provided", {
     create_economy_regex = function(aliases) {
       # When no aliases are provided, the function should receive the economy
       # name.
-      return(expected_regex)
+      expected_regex
     }
   )
 
@@ -70,7 +70,7 @@ test_that("uses provided aliases to create regex", {
     create_economy_regex = function(aliases) {
       # Check that the provided aliases are forwarded correctly.
       expect_equal(aliases, c("3", "Econia", "alias1", "alias2"))
-      return(expected_regex)
+      expected_regex
     }
   )
 

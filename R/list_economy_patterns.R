@@ -20,6 +20,6 @@
 #' @keywords internal
 list_economy_patterns <- function() {
   builtin <- get0("economy_patterns", envir = asNamespace("econid"))
-  custom  <- .econid_env$custom_economy_patterns
+  custom  <- get("custom_economy_patterns", envir = .econid_env)
   dplyr::bind_rows(builtin, custom)
 }
