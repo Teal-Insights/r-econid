@@ -10,7 +10,9 @@ standardize_economies(
   code_col = NULL,
   output_cols = c("economy_id", "economy_name", "economy_type"),
   default_economy_type = NA_character_,
-  warn_ambiguous = TRUE
+  warn_ambiguous = TRUE,
+  overwrite = TRUE,
+  warn_overwrite = TRUE
 )
 }
 \arguments{
@@ -29,6 +31,11 @@ specified in the data. Options are "country", "institution", or
 include "economy_type".}
 
 \item{warn_ambiguous}{Logical; whether to warn about ambiguous matches}
+
+\item{overwrite}{Logical; whether to overwrite existing economy_* columns}
+
+\item{warn_overwrite}{Logical; whether to warn when overwriting existing
+economy_* columns. Defaults to TRUE.}
 }
 \value{
 A data frame with standardized economy information merged with the

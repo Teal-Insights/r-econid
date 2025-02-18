@@ -12,4 +12,6 @@
 ^LICENSE\.md$
 ^data-raw$
 ^.env$
-^data-raw/.csv$
+^data-raw\.csv$
+^.cursorrules$
+^.specstory$

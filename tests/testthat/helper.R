@@ -14,6 +14,7 @@ local_clean_econid_patterns <- function(env = parent.frame()) {
 
   # Use withr::defer() so that when the current test_that() finishes,
   # we restore the old data (if you want to restore it).
+  rlang::is_installed("withr")
   withr::defer({
     .econid_env$custom_economy_patterns <- old
   }, envir = env)

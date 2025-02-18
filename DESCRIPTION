@@ -1,6 +1,6 @@
 Package: econid
 Title: Standardized Geography for Economists
-Version: 0.0.2.9000
+Version: 0.0.1.9003
 Authors@R: 
     c(person("Teal Insights", email = "lte@tealinsights.com", role = c("aut", "cre", "cph")))
 Description: Provides standardized country and aggregate mappings for working with economic data published by the IMF and World Bank. Aims to facilitate consistent data analysis and reporting.
@@ -8,6 +8,10 @@ License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
+Imports: 
+    cli,
+    rlang,
+    tibble
 Suggests:
     testthat (>= 3.0.0),
     devtools (>= 2.4.5),
@@ -18,14 +22,11 @@ Suggests:
     ellmer,
     purrr,
     stringr,
-    tibble,
-    renv
+    renv,
+    withr
 Config/testthat/edition: 3
 URL: https://teal-insights.github.io/r-econid, https://github.com/Teal-Insights/r-econid
 BugReports: https://github.com/Teal-Insights/r-econid/issues
 Depends: 
     R (>= 4.1.0)
 LazyData: true
-Imports: 
-    cli,
-    rlang

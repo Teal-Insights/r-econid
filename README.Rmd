@@ -74,7 +74,7 @@ library(econid)
 
 Below is a high-level overview of how `econid` works in practice, followed by a more detailed description of the main function and its parameters. The examples and tests illustrate typical usage patterns.
 
-### Summation
+### Package Summary
 
 1. **Input validation**  
    The package checks if your input dataset and specified columns exist. It also ensures you only request valid output columns (e.g., `"economy_name"`, `"economy_id"`, `"economy_type"`, `"iso2c"`, and `"iso3c"`). Any invalid columns raise an error.
@@ -90,6 +90,7 @@ Below is a high-level overview of how `econid` works in practice, followed by a 
    Once the function finds a match, it returns a new or augmented data frame with standardized columns (e.g., `"economy_id"`, `"economy_name"`, `"economy_type"`, etc.). You control exactly which standardized columns appear via the `output_cols` argument.
 
 4. **Handling missing and custom cases**  
+   - Custom economies can be added using `add_economy_pattern()` before standardization
    - When an economy cannot be matched, it retains the original input name in the `"economy_name"` column (if requested) and shows `NA` in `"economy_id"`.  
    - You can optionally specify a default economy type for unmatched entries (`default_economy_type`).
    - Warnings are issued for ambiguous or incomplete matches if `warn_ambiguous` is `TRUE`.
@@ -156,38 +157,26 @@ standardize_economies(
 
 A data frame (or tibble) the same size as `data`, augmented (or merged) with the requested standardized columns.
 
-### Examples
+### `add_economy_pattern()` Function
+
+The `add_economy_pattern()` function allows you to add custom economy patterns to the package. This is useful if you need to standardize economies that are not in the default list.
 
 ``` {r}
-# Specifying a code column and additional output columns
-df2 <- data.frame(
-  econ_name = c("United States", "united.states", "Germany", "NotInList"),
-  econ_code = c("USA", NA, "DEU", "ZZZ")
-)
-result2 <- standardize_economies(
-  df2,
-  name_col = econ_name,
-  code_col = econ_code,
-  output_cols = c("economy_id", "economy_name", "iso2c", "iso3c"),
-  default_economy_type = "Aggregate"
-)
-print(result2)
-```
-
-``` {r}
-# Ambiguities and warnings
-df3 <- data.frame(
-  name = c("USA", "France"),
-  code = c("FRA", NA)
+add_economy_pattern(
+  "BJ-CITY",
+  "Beijing City",
+  economy_type = "other",
+  aliases = c("Beijing Municipality")
 )
 
-result3 <- standardize_economies(df3, name_col = name, code_col = code)
+df_custom <- data.frame(economy = c("United States", "Beijing Municipality"))
+result_custom <- standardize_economies(df_custom, name_col = economy)
+print(result_custom)
 ```
 
 Use these patterns to explore the package and integrate it into your data cleaning workflows. For finer-grained operations (e.g., fuzzy matching or custom expansions), keep an eye on the package roadmap for future enhancements. We welcome your feedback and contributions!
 
 ## Roadmap
 
-- Allow users to extend the list with custom economies
 - Add a fuzzy join function
 - Add a fuzzy filter function
