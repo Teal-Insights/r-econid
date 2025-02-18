@@ -9,7 +9,7 @@ predefined list of patterns and ISO codes. Handles aggregate economies."><meta p
 
     <a class="navbar-brand me-2" href="../index.html">econid</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.2.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.1.9003</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -46,7 +46,9 @@ predefined list of patterns and ISO codes. Handles aggregate economies.</p>
 <span>  code_col <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  output_cols <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"economy_id"</span>, <span class="st">"economy_name"</span>, <span class="st">"economy_type"</span><span class="op">)</span>,</span>
 <span>  default_economy_type <span class="op">=</span> <span class="cn">NA_character_</span>,</span>
-<span>  warn_ambiguous <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span>  warn_ambiguous <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  overwrite <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  warn_overwrite <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -80,6 +82,15 @@ include "economy_type".</p></dd>
 
 <dt id="arg-warn-ambiguous">warn_ambiguous<a class="anchor" aria-label="anchor" href="#arg-warn-ambiguous"></a></dt>
 <dd><p>Logical; whether to warn about ambiguous matches</p></dd>
+
+
+<dt id="arg-overwrite">overwrite<a class="anchor" aria-label="anchor" href="#arg-overwrite"></a></dt>
+<dd><p>Logical; whether to overwrite existing economy_* columns</p></dd>
+
+
+<dt id="arg-warn-overwrite">warn_overwrite<a class="anchor" aria-label="anchor" href="#arg-warn-overwrite"></a></dt>
+<dd><p>Logical; whether to warn when overwriting existing
+economy_* columns. Defaults to TRUE.</p></dd>
 
 </dl></div>
     <div class="section level2">
