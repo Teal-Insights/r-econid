@@ -4,14 +4,14 @@
 <url><loc>https://teal-insights.github.io/r-econid/LICENSE.html</loc></url>
 <url><loc>https://teal-insights.github.io/r-econid/authors.html</loc></url>
 <url><loc>https://teal-insights.github.io/r-econid/index.html</loc></url>
-<url><loc>https://teal-insights.github.io/r-econid/reference/add_economy_pattern.html</loc></url>
-<url><loc>https://teal-insights.github.io/r-econid/reference/create_economy_regex.html</loc></url>
-<url><loc>https://teal-insights.github.io/r-econid/reference/economy_patterns.html</loc></url>
+<url><loc>https://teal-insights.github.io/r-econid/reference/add_entity_pattern.html</loc></url>
+<url><loc>https://teal-insights.github.io/r-econid/reference/create_entity_regex.html</loc></url>
+<url><loc>https://teal-insights.github.io/r-econid/reference/entity_patterns.html</loc></url>
 <url><loc>https://teal-insights.github.io/r-econid/reference/index.html</loc></url>
-<url><loc>https://teal-insights.github.io/r-econid/reference/list_economy_patterns.html</loc></url>
-<url><loc>https://teal-insights.github.io/r-econid/reference/match_economy_ids.html</loc></url>
-<url><loc>https://teal-insights.github.io/r-econid/reference/standardize_economies.html</loc></url>
+<url><loc>https://teal-insights.github.io/r-econid/reference/list_entity_patterns.html</loc></url>
+<url><loc>https://teal-insights.github.io/r-econid/reference/match_entity_ids.html</loc></url>
+<url><loc>https://teal-insights.github.io/r-econid/reference/standardize_entities.html</loc></url>
 <url><loc>https://teal-insights.github.io/r-econid/reference/try_regex_match.html</loc></url>
-<url><loc>https://teal-insights.github.io/r-econid/reference/validate_economy_inputs.html</loc></url>
+<url><loc>https://teal-insights.github.io/r-econid/reference/validate_entity_inputs.html</loc></url>
 </urlset>
 

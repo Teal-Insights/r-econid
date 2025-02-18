@@ -17,8 +17,8 @@
 <script src="deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="Standardized Geography for Economists">
-<meta name="description" content="Provides standardized country and aggregate mappings for working with economic data published by the IMF and World Bank. Aims to facilitate consistent data analysis and reporting.">
-<meta property="og:description" content="Provides standardized country and aggregate mappings for working with economic data published by the IMF and World Bank. Aims to facilitate consistent data analysis and reporting.">
+<meta name="description" content="Provides standardized entity (economy, aggregate, institution, etc.) name and id mappings for working with economic data published by the IMF and World Bank. Aims to facilitate consistent data analysis and reporting.">
+<meta property="og:description" content="Provides standardized entity (economy, aggregate, institution, etc.) name and id mappings for working with economic data published by the IMF and World Bank. Aims to facilitate consistent data analysis and reporting.">
 <meta property="og:image" content="https://teal-insights.github.io/r-econid/logo.png">
 </head>
 <body>
@@ -127,14 +127,14 @@
 </h2>
 <p>Below is a high-level overview of how <code>econid</code> works in practice, followed by a more detailed description of the main function and its parameters. The examples and tests illustrate typical usage patterns.</p>
 <div class="section level3">
-<h3 id="summation">Summation<a class="anchor" aria-label="anchor" href="#summation"></a>
+<h3 id="package-summary">Package Summary<a class="anchor" aria-label="anchor" href="#package-summary"></a>
 </h3>
 <ol style="list-style-type: decimal">
 <li><p><strong>Input validation</strong><br>
-The package checks if your input dataset and specified columns exist. It also ensures you only request valid output columns (e.g., <code>"economy_name"</code>, <code>"economy_id"</code>, <code>"economy_type"</code>, <code>"iso2c"</code>, and <code>"iso3c"</code>). Any invalid columns raise an error.</p></li>
+The package checks if your input dataset and specified columns exist. It also ensures you only request valid output columns (e.g., <code>"entity_name"</code>, <code>"entity_id"</code>, <code>"entity_type"</code>, <code>"iso2c"</code>, and <code>"iso3c"</code>). Any invalid columns raise an error.</p></li>
 <li>
 <p><strong>Name and code matching</strong><br>
-The function <code><a href="reference/standardize_economies.html">standardize_economies()</a></code> looks in your dataset for names (and optionally codes) that might match an economy. It:</p>
+The function <code><a href="reference/standardize_entities.html">standardize_entities()</a></code> looks in your dataset for names (and optionally codes) that might match an entity. It:</p>
 <ul>
 <li>Converts the names to UTF-8 for consistent processing.</li>
 <li>Calls internal functions to try matching each entry via case-insensitive regex patterns.</li>
@@ -144,13 +144,14 @@ The function <code><a href="reference/standardize_economies.html">standardize_ec
 </ul>
 </li>
 <li><p><strong>Merging standardized columns</strong><br>
-Once the function finds a match, it returns a new or augmented data frame with standardized columns (e.g., <code>"economy_id"</code>, <code>"economy_name"</code>, <code>"economy_type"</code>, etc.). You control exactly which standardized columns appear via the <code>output_cols</code> argument.</p></li>
+Once the function finds a match, it returns a new or augmented data frame with standardized columns (e.g., <code>"entity_id"</code>, <code>"entity_name"</code>, <code>"entity_type"</code>, etc.). You control exactly which standardized columns appear via the <code>output_cols</code> argument.</p></li>
 <li>
 <p><strong>Handling missing and custom cases</strong></p>
 <ul>
-<li>When an economy cannot be matched, it retains the original input name in the <code>"economy_name"</code> column (if requested) and shows <code>NA</code> in <code>"economy_id"</code>.<br>
+<li>Custom entities can be added using <code><a href="reference/add_entity_pattern.html">add_entity_pattern()</a></code> before standardization</li>
+<li>When an entity cannot be matched, it retains the original input name in the <code>"entity_name"</code> column (if requested) and shows <code>NA</code> in <code>"entity_id"</code>.<br>
 </li>
-<li>You can optionally specify a default economy type for unmatched entries (<code>default_economy_type</code>).</li>
+<li>You can optionally specify a default entity type for unmatched entries (<code>default_entity_type</code>).</li>
 <li>Warnings are issued for ambiguous or incomplete matches if <code>warn_ambiguous</code> is <code>TRUE</code>.</li>
 </ul>
 </li>
@@ -160,44 +161,44 @@ Once the function finds a match, it returns a new or augmented data frame with s
 <h3 id="program-flow">Program Flow<a class="anchor" aria-label="anchor" href="#program-flow"></a>
 </h3>
 <pre class="mermaid"><code>flowchart TD
-    A[standardize_economies] --&gt; B[Validate Inputs]
+    A[standardize_entities] --&gt; B[Validate Inputs]
     B --&gt; C[Convert name column to UTF-8]
     C --&gt; D[For each row: try_regex_match]
     D --&gt; E[Possible Multiple or No Matches]
     E --&gt;|Multiple| F[Warn if warn_ambiguous=TRUE]
-    E --&gt;|Single Match or None| G[Assign economy_id]
+    E --&gt;|Single Match or None| G[Assign entity_id]
     F --&gt; G
-    G --&gt; H[Join with list_economy_patterns]
-    H --&gt; I[Replace NAs in economy_name, economy_id,&lt;br/&gt;and economy_type if needed]
+    G --&gt; H[Join with list_entity_patterns]
+    H --&gt; I[Replace NAs in entity_name, entity_id,&lt;br/&gt;and entity_type if needed]
     I --&gt; J[Return Final Data Frame&lt;br/&gt;with Requested output_cols]</code></pre>
 </div>
 <div class="section level3">
-<h3 id="standardize_economies-function">
-<code>standardize_economies()</code> Function<a class="anchor" aria-label="anchor" href="#standardize_economies-function"></a>
+<h3 id="standardize_entities-function">
+<code>standardize_entities()</code> Function<a class="anchor" aria-label="anchor" href="#standardize_entities-function"></a>
 </h3>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>economy <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"United States"</span>, <span class="st">"China"</span>, <span class="st">"NotACountry"</span><span class="op">)</span>, code <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"USA"</span>, <span class="st">"CHN"</span>, <span class="st">"ZZZ"</span><span class="op">)</span>, obs_value <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">3</span><span class="op">)</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>entity <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"United States"</span>, <span class="st">"China"</span>, <span class="st">"NotACountry"</span><span class="op">)</span>, code <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"USA"</span>, <span class="st">"CHN"</span>, <span class="st">"ZZZ"</span><span class="op">)</span>, obs_value <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">3</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="reference/standardize_economies.html">standardize_economies</a></span><span class="op">(</span></span>
+<span><span class="fu"><a href="reference/standardize_entities.html">standardize_entities</a></span><span class="op">(</span></span>
 <span>  data <span class="op">=</span> <span class="va">df</span>,</span>
-<span>  name_col <span class="op">=</span> <span class="va">economy</span>,</span>
+<span>  name_col <span class="op">=</span> <span class="va">entity</span>,</span>
 <span>  code_col <span class="op">=</span> <span class="va">code</span>,</span>
-<span>  output_cols <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"economy_id"</span>, <span class="st">"economy_name"</span>, <span class="st">"economy_type"</span><span class="op">)</span>,</span>
-<span>  default_economy_type <span class="op">=</span> <span class="cn">NA_character_</span>,</span>
+<span>  output_cols <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"entity_id"</span>, <span class="st">"entity_name"</span>, <span class="st">"entity_type"</span><span class="op">)</span>,</span>
+<span>  default_entity_type <span class="op">=</span> <span class="cn">NA_character_</span>,</span>
 <span>  warn_ambiguous <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb5"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="do">##         economy code obs_value economy_id  economy_name economy_type</span></span>
-<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a><span class="do">## 1 United States  USA         1        USA United States      country</span></span>
-<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a><span class="do">## 2         China  CHN         2        CHN         China      country</span></span>
-<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a><span class="do">## 3   NotACountry  ZZZ         3        ZZZ   NotACountry         &lt;NA&gt;</span></span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="do">##   entity_id   entity_name entity_type        entity code obs_value</span></span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a><span class="do">## 1       USA United States     economy United States  USA         1</span></span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a><span class="do">## 2       CHN         China     economy         China  CHN         2</span></span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a><span class="do">## 3       ZZZ   NotACountry        &lt;NA&gt;   NotACountry  ZZZ         3</span></span></code></pre></div>
 <div class="section level4">
 <h4 id="parameters">Parameters<a class="anchor" aria-label="anchor" href="#parameters"></a>
 </h4>
 <ul>
 <li><p><strong>data</strong><br>
-A data frame (or tibble) containing the economies to be standardized.</p></li>
+A data frame (or tibble) containing the entities to be standardized.</p></li>
 <li><p><strong>name_col</strong><br>
-The unquoted or quoted name of the column in <code>data</code> that contains the country or entity names.</p></li>
+The unquoted or quoted name of the column in <code>data</code> that contains the entity names to be standardized.</p></li>
 <li><p><strong>code_col</strong> <em>(optional)</em><br>
 An additional column name that might contain ISO or custom codes. When present, the function attempts to match on both this code and the name. If both match, a warning about ambiguity is issued.</p></li>
 <li>
@@ -205,25 +206,37 @@ An additional column name that might contain ISO or custom codes. When present, 
 A character vector of columns to include in the final output. Valid options:</p>
 <ul>
 <li>
-<code>"economy_id"</code><br>
+<code>"entity_id"</code><br>
 </li>
 <li>
-<code>"economy_name"</code><br>
+<code>"entity_name"</code><br>
 </li>
 <li>
-<code>"economy_type"</code><br>
+<code>"entity_type"</code><br>
 </li>
 <li>
 <code>"iso3c"</code><br>
 </li>
 <li><code>"iso2c"</code></li>
 </ul>
-<p>Defaults to <code>c("economy_id", "economy_name", "economy_type")</code>.</p>
+<p>Defaults to <code>c("entity_id", "entity_name", "entity_type")</code>.</p>
 </li>
-<li><p><strong>default_economy_type</strong> <em>(optional)</em><br>
-A character scalar (<code>"country"</code>, <code>"institution"</code>, or <code>"aggregate"</code>, etc.) to assign as the economy type where no match is found. This value only applies if <code>"economy_type"</code> is requested in <code>output_cols</code>.</p></li>
+<li>
+<p><strong>default_entity_type</strong> <em>(optional)</em><br>
+A character scalar (<code>"economy"</code>, <code>"organization"</code>, <code>"aggregate"</code>, or <code>"other"</code>) to assign as the entity type where no match is found. This value only applies if <code>"entity_type"</code> is requested in <code>output_cols</code>. The four valid values were selected to cover the most common economic use cases:</p>
+<ul>
+<li>
+<code>"economy"</code>: A legal or quasi-legal jurisdiction such as a country or autonomous region (e.g., “United States”, “Democratic Autonomous Administration of North and East Syria”)</li>
+<li>
+<code>"organization"</code>: An institution or organization such as a bank or international agency (e.g., “World Bank”, “IMF”)</li>
+<li>
+<code>"aggregate"</code>: A geographic or economic aggregate such as a region or development group (e.g., “Sub-Saharan Africa”, “Low Income Countries”)</li>
+<li>
+<code>"other"</code>: Anything that doesn’t fit into the other categories (e.g., “Elon Musk”, “The Moon”)</li>
+</ul>
+</li>
 <li><p><strong>warn_ambiguous</strong> <em>(optional)</em><br>
-A logical indicating whether to warn if a single row in <code>data</code> can match more than one economy. Defaults to <code>TRUE</code>.</p></li>
+A logical indicating whether to warn if a single row in <code>data</code> can match more than one entity. Defaults to <code>TRUE</code>.</p></li>
 </ul>
 </div>
 <div class="section level4">
@@ -233,51 +246,26 @@ A logical indicating whether to warn if a single row in <code>data</code> can ma
 </div>
 </div>
 <div class="section level3">
-<h3 id="examples">Examples<a class="anchor" aria-label="anchor" href="#examples"></a>
+<h3 id="add_entity_pattern-function">
+<code>add_entity_pattern()</code> Function<a class="anchor" aria-label="anchor" href="#add_entity_pattern-function"></a>
 </h3>
+<p>The <code><a href="reference/add_entity_pattern.html">add_entity_pattern()</a></code> function allows you to add custom entity patterns to the package. This is useful if you need to standardize entities that are not in the default list.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Specifying a code column and additional output columns</span></span>
-<span><span class="va">df2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
-<span>  econ_name <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"United States"</span>, <span class="st">"united.states"</span>, <span class="st">"Germany"</span>, <span class="st">"NotInList"</span><span class="op">)</span>,</span>
-<span>  econ_code <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"USA"</span>, <span class="cn">NA</span>, <span class="st">"DEU"</span>, <span class="st">"ZZZ"</span><span class="op">)</span></span>
-<span><span class="op">)</span></span>
-<span><span class="va">result2</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/standardize_economies.html">standardize_economies</a></span><span class="op">(</span></span>
-<span>  <span class="va">df2</span>,</span>
-<span>  name_col <span class="op">=</span> <span class="va">econ_name</span>,</span>
-<span>  code_col <span class="op">=</span> <span class="va">econ_code</span>,</span>
-<span>  output_cols <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"economy_id"</span>, <span class="st">"economy_name"</span>, <span class="st">"iso2c"</span>, <span class="st">"iso3c"</span><span class="op">)</span>,</span>
-<span>  default_economy_type <span class="op">=</span> <span class="st">"Aggregate"</span></span>
-<span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result2</span><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb7"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="do">##       econ_name econ_code economy_id  economy_name iso3c iso2c</span></span>
-<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a><span class="do">## 1 United States       USA        USA United States   USA    US</span></span>
-<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a><span class="do">## 2 united.states      &lt;NA&gt;        USA United States   USA    US</span></span>
-<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a><span class="do">## 3       Germany       DEU        DEU       Germany   DEU    DE</span></span>
-<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a><span class="do">## 4     NotInList       ZZZ        ZZZ     NotInList  &lt;NA&gt;  &lt;NA&gt;</span></span></code></pre></div>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Ambiguities and warnings</span></span>
-<span><span class="va">df3</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
-<span>  name <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"USA"</span>, <span class="st">"France"</span><span class="op">)</span>,</span>
-<span>  code <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"FRA"</span>, <span class="cn">NA</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="reference/add_entity_pattern.html">add_entity_pattern</a></span><span class="op">(</span></span>
+<span>  <span class="st">"BJ-CITY"</span>,</span>
+<span>  <span class="st">"Beijing City"</span>,</span>
+<span>  entity_type <span class="op">=</span> <span class="st">"economy"</span>,</span>
+<span>  aliases <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Beijing Municipality"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">result3</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/standardize_economies.html">standardize_economies</a></span><span class="op">(</span><span class="va">df3</span>, name_col <span class="op">=</span> <span class="va">name</span>, code_col <span class="op">=</span> <span class="va">code</span><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb9"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a><span class="do">## Warning: There was 1 warning in `dplyr::mutate()`.</span></span>
-<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a><span class="do">## ℹ In argument: `economy_id = match_economy_ids(...)`.</span></span>
-<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a><span class="do">## Caused by warning:</span></span>
-<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a><span class="do">## ! ! Ambiguous match for "USA"</span></span>
-<span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a><span class="do">## • Matches multiple patterns: FRA, USA</span></span></code></pre></div>
+<span><span class="va">df_custom</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>entity <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"United States"</span>, <span class="st">"Beijing Municipality"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">result_custom</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/standardize_entities.html">standardize_entities</a></span><span class="op">(</span><span class="va">df_custom</span>, name_col <span class="op">=</span> <span class="va">entity</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result_custom</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="do">##   entity_id   entity_name entity_type               entity</span></span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a><span class="do">## 1       USA United States     economy        United States</span></span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a><span class="do">## 2   BJ-CITY  Beijing City     economy Beijing Municipality</span></span></code></pre></div>
 <p>Use these patterns to explore the package and integrate it into your data cleaning workflows. For finer-grained operations (e.g., fuzzy matching or custom expansions), keep an eye on the package roadmap for future enhancements. We welcome your feedback and contributions!</p>
 </div>
-</div>
-<div class="section level2">
-<h2 id="roadmap">Roadmap<a class="anchor" aria-label="anchor" href="#roadmap"></a>
-</h2>
-<ul>
-<li>Allow users to extend the list with custom economies</li>
-<li>Add a fuzzy join function</li>
-<li>Add a fuzzy filter function</li>
-</ul>
 </div>
 </div>
 
