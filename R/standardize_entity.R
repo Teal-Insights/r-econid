@@ -177,10 +177,10 @@ standardize_entity <- function(
   # Reorder columns
   results <- results |>
     dplyr::select(
-      cols_before,
+      dplyr::all_of(cols_before),
       dplyr::all_of(final_cols),
       dplyr::all_of(target_cols_names),
-      cols_after
+      dplyr::all_of(cols_after)
     )
 
   results
