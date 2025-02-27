@@ -12,12 +12,12 @@ valid_cols <- c(
 #'
 #' @param data A data frame or tibble containing entity identifiers to
 #'   standardize
-#' @param target_cols Character vector or vector of symbols specifying the
-#'   columns containing identifiers (names, codes, abbreviations, etc.) for a
-#'   single entity to be standardized. (To standardize another entity, just
-#'   call the function again on the same data frame with the next entity's
-#'   identifier columns.) The function will try to match each column in
-#'   sequence, prioritizing matches from earlier columns.
+#' @param ... Columns containing entity names and/or IDs. These can be
+#'   specified using unquoted column names (e.g., `entity_name`, `entity_id`)
+#'   or quoted column names (e.g., `"entity_name"`, `"entity_id"`).  Must
+#'   specify at least one column. If two columns are specified, the first is
+#'   assumed to be the entity name and the second is assumed to be the entity
+#'   ID.
 #' @param output_cols Character vector specifying desired output columns.
 #'   Options are "entity_id", "entity_name", "entity_type", "iso3c", "iso2c".
 #'   Defaults to c("entity_id", "entity_name", "entity_type").
@@ -41,16 +41,17 @@ valid_cols <- c(
 #'   first target column.
 #'
 #' @examples
-#' # Standardize a single entity
-#' df <- data.frame(country_name = c("United States", "China"))
-#' standardize_entity(df, target_cols = country_name)
-#'
-#' # Standardize with multiple identifier columns
-#' df <- data.frame(
-#'   country_name = c("United States", "China", "Unknown"),
-#'   country_code = c("USA", "CHN", "UNK")
+#' # Standardize entity names and IDs in a data frame
+#' test_df <- tibble::tribble(
+#'   ~entity,         ~code,
+#'   "United States",  "USA",
+#'   "united.states",  NA,
+#'   "us",             "US",
+#'   "EU",             NA,
+#'   "NotACountry",    NA
 #' )
-#' standardize_entity(df, target_cols = c(country_name, country_code))
+#'
+#' standardize_entity(test_df, entity, code)
 #'
 #' # Standardize multiple entities in sequence with a prefix
 #' df <- data.frame(
@@ -59,17 +60,17 @@ valid_cols <- c(
 #' )
 #' df |>
 #'   standardize_entity(
-#'     target_cols = country_name
+#'     country_name
 #'   ) |>
 #'   standardize_entity(
-#'     target_cols = counterpart_name,
+#'     counterpart_name,
 #'     prefix = "counterpart"
 #'   )
 #'
 #' @export
 standardize_entity <- function(
   data,
-  target_cols,
+  ...,
   output_cols = c("entity_id", "entity_name", "entity_type"),
   prefix = NULL,
   default_entity_type = NA_character_,
@@ -77,21 +78,19 @@ standardize_entity <- function(
   overwrite = TRUE,
   warn_overwrite = TRUE
 ) {
-  # Allow user to use either quoted or unquoted column names
-  target_cols_expr <- rlang::enquo(target_cols)
+  # Gather the columns from ...
+  target_cols_syms <- rlang::ensyms(...)
 
-  # Handle case where target_cols is a single column
-  if (
-    rlang::quo_is_symbol(target_cols_expr) ||
-      rlang::quo_is_call(target_cols_expr)
-  ) {
-    target_cols_names <- rlang::as_name(target_cols_expr)
-  } else {
-    # Handle case where target_cols is a vector of columns
-    target_cols_names <- sapply(
-      rlang::eval_tidy(target_cols_expr), rlang::as_name
-    )
-  }
+  # Turn syms into strings
+  target_cols_names <- purrr::map_chr(target_cols_syms, rlang::as_name)
+
+  # Validate inputs
+  final_cols <- validate_entity_inputs(
+    data,
+    target_cols_names,
+    output_cols,
+    prefix
+  )
 
   # Apply prefix to output column names if provided
   prefixed_output_cols <- output_cols
@@ -114,14 +113,6 @@ standardize_entity <- function(
   if (overwrite && length(existing_cols) > 0) {
     data <- data[, setdiff(names(data), existing_cols), drop = FALSE]
   }
-
-  # Validate inputs
-  final_cols <- validate_entity_inputs(
-    data,
-    target_cols_names,
-    output_cols,
-    prefix
-  )
 
   # Convert all target columns to character UTF-8
   for (col in target_cols_names) {
