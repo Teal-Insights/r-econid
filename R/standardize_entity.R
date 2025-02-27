@@ -204,7 +204,7 @@ validate_entity_inputs <- function(
   data,
   target_cols_names,
   output_cols,
-  prefix = NULL
+  prefix
 ) {
   # Validate data frame
   if (!is.data.frame(data)) {
@@ -220,13 +220,12 @@ validate_entity_inputs <- function(
   }
 
   # Validate output_cols against prefixed valid_cols
-  prefixed_valid_cols <- paste(prefix, valid_cols, sep = "_")
-  invalid_cols <- setdiff(output_cols, prefixed_valid_cols)
+  invalid_cols <- setdiff(output_cols, valid_cols)
   if (length(invalid_cols) > 0) {
     cli::cli_abort(
       paste(
         "Output columns {.val {invalid_cols}} must be one of",
-        "{.val {prefixed_valid_cols}}"
+        "{.val {valid_cols}}"
       )
     )
   }
@@ -236,10 +235,6 @@ validate_entity_inputs <- function(
     if (!is.character(prefix) || length(prefix) != 1) {
       cli::cli_abort("Prefix must be a single character string.")
     }
-
-    # Check if prefixed column names would conflict with existing columns
-    prefixed_cols <- paste(prefix, output_cols, sep = "_")
-    return(prefixed_cols)
   }
 
   output_cols
