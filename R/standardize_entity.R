@@ -1,0 +1,415 @@
+# Define valid output columns
+valid_cols <- c(
+  "entity_id", "entity_name", "entity_type", "iso3c", "iso2c"
+)
+
+#' Standardize Entity Identifiers
+#'
+#' @description
+#' Standardizes entity identifiers (e.g., name, ISO code) in an economic data
+#' frame by matching them against a predefined list of regex patterns to add
+#' columns containing standardized identifiers to the data frame.
+#'
+#' @param data A data frame or tibble containing entity identifiers to
+#'   standardize
+#' @param target_cols Character vector or vector of symbols specifying the
+#'   columns containing identifiers (names, codes, abbreviations, etc.) for a
+#'   single entity to be standardized. (To standardize another entity, just
+#'   call the function again on the same data frame with the next entity's
+#'   identifier columns.) The function will try to match each column in
+#'   sequence, prioritizing matches from earlier columns.
+#' @param output_cols Character vector specifying desired output columns.
+#'   Options are "entity_id", "entity_name", "entity_type", "iso3c", "iso2c".
+#'   Defaults to c("entity_id", "entity_name", "entity_type").
+#' @param prefix Optional character string to prefix the output column names.
+#'   Useful when standardizing multiple entities in the same dataset (e.g.,
+#'   "country", "counterpart"). If provided, output columns will be named
+#'   prefix_entity_id, prefix_entity_name, etc.
+#' @param default_entity_type Character; the default entity type to use for
+#'   entities that do not match any of the patterns. Options are "economy",
+#'   "organization", "aggregate", or "other". If this argument is not supplied,
+#'   the default value will be NA_character_. Argument will be ignored if
+#'   output_cols do not include "entity_type".
+#' @param warn_ambiguous Logical; whether to warn about ambiguous matches
+#' @param overwrite Logical; whether to overwrite existing entity_* columns
+#' @param warn_overwrite Logical; whether to warn when overwriting existing
+#'   entity_* columns. Defaults to TRUE.
+#'
+#' @return A data frame with standardized entity information merged with the
+#'   input data. The standardized columns are placed directly to the left of the
+#'   first target column.
+#'
+#' @examples
+#' \dontrun{
+#' # Standardize a single entity
+#' df <- data.frame(country_name = c("United States", "China"))
+#' standardize_entity(df, target_cols = country_name)
+#'
+#' # Standardize with multiple identifier columns
+#' df <- data.frame(
+#'   country_name = c("United States", "China", "Unknown"),
+#'   country_code = c("USA", "CHN", "UNK")
+#' )
+#' standardize_entity(df, target_cols = c(country_name, country_code))
+#'
+#' # Standardize multiple entities in sequence with prefixes
+#' df <- data.frame(
+#'   country_name = c("United States", "France"),
+#'   counterpart_name = c("China", "Germany")
+#' )
+#' df |>
+#'   standardize_entity(
+#'     target_cols = country_name,
+#'     prefix = "country"
+#'   ) |>
+#'   standardize_entity(
+#'     target_cols = counterpart_name,
+#'     prefix = "counterpart"
+#'   )
+#' }
+#'
+#' @export
+standardize_entity <- function(
+  data,
+  target_cols,
+  output_cols = c("entity_id", "entity_name", "entity_type"),
+  prefix = NULL,
+  default_entity_type = NA_character_,
+  warn_ambiguous = TRUE,
+  overwrite = TRUE,
+  warn_overwrite = TRUE
+) {
+  # Allow user to use either quoted or unquoted column names
+  target_cols_expr <- rlang::enquo(target_cols)
+
+  # Handle case where target_cols is a single column
+  if (
+    rlang::quo_is_symbol(target_cols_expr) ||
+      rlang::quo_is_call(target_cols_expr)
+  ) {
+    target_cols_names <- rlang::as_name(target_cols_expr)
+  } else {
+    # Handle case where target_cols is a vector of columns
+    target_cols_names <- sapply(
+      rlang::eval_tidy(target_cols_expr), rlang::as_name
+    )
+  }
+
+  # Apply prefix to output columns if provided
+  prefixed_output_cols <- output_cols
+  if (!is.null(prefix)) {
+    prefixed_output_cols <- paste(prefix, output_cols, sep = "_")
+  }
+
+  # Check for existing entity columns
+  existing_cols <- intersect(names(data), prefixed_output_cols)
+  if (length(existing_cols) > 0) {
+    if (warn_overwrite) {
+      cli::cli_warn(
+        "Overwriting existing entity columns: {.val {existing_cols}}"
+      )
+    }
+  }
+
+  # Remove existing entity columns if overwrite is TRUE
+  if (overwrite && length(existing_cols) > 0) {
+    data <- data[, setdiff(names(data), existing_cols), drop = FALSE]
+  }
+
+  # Validate inputs
+  final_cols <- validate_entity_inputs(
+    data,
+    target_cols_names,
+    output_cols,
+    prefix
+  )
+
+  # Convert all target columns to character UTF-8
+  for (col in target_cols_names) {
+    data[[col]] <- enc2utf8(as.character(data[[col]]))
+  }
+
+  # Use regex match to add a column of entity_ids to the data
+  data <- data |>
+    dplyr::mutate(entity_id = match_entity_ids_multi(
+      data = data,
+      target_cols = target_cols_names,
+      warn_ambiguous = warn_ambiguous
+    ))
+
+  # Join entity_patterns to the input data
+  results <- dplyr::left_join(
+    data,
+    list_entity_patterns(),
+    by = c(entity_id = "entity_id")
+  )
+
+  # Drop any valid_cols not in the final_cols
+  difference <- setdiff(c(valid_cols, "entity_regex"), final_cols)
+  results <- results[, !(names(results) %in% difference)]
+
+  # Replace any NA values in entity_name with the value in the first target
+  # column
+  if ("entity_name" %in% output_cols) {
+    results$entity_name[
+      is.na(results$entity_name)
+    ] <- data[[target_cols_names[1]]][
+      is.na(results$entity_name)
+    ]
+  }
+
+  # Replace any NA values in entity_type with the default_entity_type
+  if ("entity_type" %in% output_cols) {
+    results$entity_type[
+      is.na(results$entity_type)
+    ] <- default_entity_type
+  }
+
+  # Apply prefix to output columns if provided
+  if (!is.null(prefix)) {
+    for (col in output_cols) {
+      if (col %in% names(results)) {
+        results[[paste(prefix, col, sep = "_")]] <- results[[col]]
+        results[[col]] <- NULL
+      }
+    }
+  }
+
+  # Determine the position of the first target column
+  first_target_col_pos <- which(names(results) == target_cols_names[1])
+
+  # Reorder columns to place output columns directly to the left of the first
+  # target column
+  if (!is.null(prefix)) {
+    output_cols_with_prefix <- paste(prefix, output_cols, sep = "_")
+  } else {
+    output_cols_with_prefix <- output_cols
+  }
+
+  # Get all columns except the output columns
+  other_cols <- setdiff(names(results), output_cols_with_prefix)
+
+  # Create the new column order
+  if (length(first_target_col_pos) > 0 && first_target_col_pos > 1) {
+    # Columns before the first target column
+    before_cols <- other_cols[1:(first_target_col_pos - 1)]
+    # Columns after and including the first target column
+    after_cols <- other_cols[first_target_col_pos:length(other_cols)]
+    # New column order
+    new_col_order <- c(before_cols, output_cols_with_prefix, after_cols)
+  } else {
+    # If the first target column is the first column or not found, place output
+    # columns at the beginning
+    new_col_order <- c(output_cols_with_prefix, other_cols)
+  }
+
+  # Reorder the columns
+  results <- results[, new_col_order]
+
+  results
+}
+
+#' Validate inputs for entity standardization
+#'
+#' @description
+#' Validates the input data frame and column names for entity standardization.
+#'
+#' @param data A data frame or tibble to validate
+#' @param target_cols_names Character vector of column names containing entity
+#'   identifiers
+#' @param output_cols Character vector of requested output columns
+#' @param prefix Optional character string to prefix the output column names
+#'
+#' @return Character vector of validated output columns
+#'
+#' @keywords internal
+validate_entity_inputs <- function(
+  data,
+  target_cols_names,
+  output_cols,
+  prefix = NULL
+) {
+  # Validate data frame
+  if (!is.data.frame(data)) {
+    cli::cli_abort("Input {.var data} must be a data frame or tibble.")
+  }
+
+  # Validate column names
+  missing_cols <- setdiff(target_cols_names, names(data))
+  if (length(missing_cols) > 0) {
+    cli::cli_abort("Column(s) {.var {missing_cols}} not found in data.")
+  }
+
+  # Validate output_cols
+  invalid_cols <- setdiff(output_cols, valid_cols)
+  if (length(invalid_cols) > 0) {
+    cli::cli_abort("Invalid output columns: {.val {invalid_cols}}")
+  }
+
+  # Validate prefix if provided
+  if (!is.null(prefix)) {
+    if (!is.character(prefix) || length(prefix) != 1) {
+      cli::cli_abort("Prefix must be a single character string.")
+    }
+
+    # Check if prefixed column names would conflict with existing columns
+    prefixed_cols <- paste(prefix, output_cols, sep = "_")
+    return(prefixed_cols)
+  }
+
+  output_cols
+}
+
+#' Match entity Ids
+#'
+#' @description
+#' Given vectors of names and codes, match them against a list of patterns and
+#' return a vector of entity ids.
+#'
+#' @param names Character vector of entity names to standardize
+#' @param codes Optional character vector of entity codes
+#' @param warn_ambiguous Logical; whether to warn about ambiguous matches
+#'
+#' @return A vector of entity ids
+#'
+#' @keywords internal
+match_entity_ids <- function(
+  names,
+  codes = NULL,
+  warn_ambiguous = TRUE
+) {
+  # Initialize results
+  results <- c()
+
+  # Process each name
+  for (i in seq_along(names)) {
+    current_name <- names[i]
+    current_code <- if (!is.null(codes)) {
+      codes[i]
+    } else {
+      NULL
+    }
+
+    # Try to match the current code (if provided)
+    if (!is.null(current_code)) {
+      code_match_results <- try_regex_match(current_code)
+    } else {
+      code_match_results <- c()
+    }
+
+    # Try to match the current name
+    name_match_results <- try_regex_match(current_name)
+
+    # Take the union of the two match results
+    match_results <- unique(c(code_match_results, name_match_results))
+
+    # Warn if there are multiple matches
+    if (warn_ambiguous && length(match_results) > 1) {
+      cli::cli_warn(c(
+        "!" = "Ambiguous match for {.val {current_name}}",
+        "*" = paste(
+          "Matches multiple patterns:",
+          paste(match_results, collapse = ", ")
+        )
+      ))
+    }
+
+    # Add the first match result to the results vector
+    results <- append(results, match_results[1])
+  }
+
+  results
+}
+
+#' Try Regex Pattern Match
+#'
+#' @description
+#' Attempts to match a string and return matching entity_id(s) using regex
+#' patterns from entity_patterns.
+#'
+#' @param name Character string of entity name or code
+#'
+#' @return Character vector of entity_ids
+#'
+#' @keywords internal
+try_regex_match <- function(name) {
+  patterns <- list_entity_patterns()
+
+  grepl_mask <- function(pattern, x) {
+    grepl(pattern, x, ignore.case = TRUE, perl = TRUE)
+  }
+
+  # Get a boolean vector of which regex patterns match the name
+  matches_case_insensitive <- vapply(
+    patterns$entity_regex,
+    grepl_mask,
+    x = name,
+    FUN.VALUE = logical(1)
+  )
+
+  # Return the entity_ids of the patterns that match the name
+  patterns$entity_id[
+    matches_case_insensitive
+  ]
+}
+
+#' Match entity IDs using multiple columns
+#'
+#' @description
+#' Given a data frame and a vector of column names, match the values in those
+#' columns against a list of patterns and return a vector of entity ids. The
+#' function tries each column in sequence, prioritizing matches from earlier
+#' columns.
+#'
+#' @param data A data frame containing the columns to match
+#' @param target_cols Character vector of column names to match
+#' @param warn_ambiguous Logical; whether to warn about ambiguous matches
+#'
+#' @return A vector of entity ids
+#'
+#' @keywords internal
+match_entity_ids_multi <- function(
+  data,
+  target_cols,
+  warn_ambiguous = TRUE
+) {
+  # Initialize results vector with NAs
+  n_rows <- nrow(data)
+  results <- rep(NA_character_, n_rows)
+
+  # Process each row
+  for (i in seq_len(n_rows)) {
+    # Try each target column in sequence
+    for (col in target_cols) {
+      current_value <- data[[col]][i]
+
+      # Skip NA or empty values
+      if (is.na(current_value) || current_value == "") {
+        next
+      }
+
+      # Try to match the current value
+      match_results <- try_regex_match(current_value)
+
+      # If we found matches
+      if (length(match_results) > 0) {
+        # Warn if there are multiple matches
+        if (warn_ambiguous && length(match_results) > 1) {
+          cli::cli_warn(c(
+            "!" = "Ambiguous match for {.val {current_value}}",
+            "*" = paste(
+              "Matches multiple patterns:",
+              paste(match_results, collapse = ", ")
+            )
+          ))
+        }
+
+        # Store the first match and break out of the column loop
+        results[i] <- match_results[1]
+        break
+      }
+    }
+  }
+
+  results
+}

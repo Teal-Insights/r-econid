@@ -8,7 +8,7 @@ test_that("basic country standardization works", {
     "NotACountry",    NA
   )
 
-  result <- standardize_entities(test_df, name_col = entity, code_col = code)
+  result <- standardize_entity(test_df, name_col = entity, code_col = code)
 
   expect_equal(
     result$entity_name,
@@ -29,7 +29,7 @@ test_that("ISO code matching takes precedence", {
 
   # Should prefer ISO code match but raise a warning
   expect_warning(
-    result <- standardize_entities(test_df, name_col = name, code_col = code),
+    result <- standardize_entity(test_df, name_col = name, code_col = code),
     "Ambiguous match"
   )
   expect_equal(result$entity_id, c("FRA", "FRA"))
@@ -43,7 +43,7 @@ test_that("standardization works without code column", {
     "NotACountry"
   )
 
-  result <- standardize_entities(test_df, name_col = country)
+  result <- standardize_entity(test_df, name_col = country)
 
   expect_equal(result$entity_name, c("United States", "France", "NotACountry"))
   expect_equal(result$entity_id, c("USA", "FRA", NA_character_))
@@ -57,7 +57,7 @@ test_that("standardization fails with invalid output columns", {
 
   # Test single invalid column
   expect_error(
-    standardize_entities(
+    standardize_entity(
       test_df,
       name_col = country,
       output_cols = "invalid_col"
@@ -67,7 +67,7 @@ test_that("standardization fails with invalid output columns", {
 
   # Test mix of valid and invalid columns
   expect_error(
-    standardize_entities(
+    standardize_entity(
       test_df,
       name_col = country,
       output_cols = c("entity_name", "bad_col", "worse_col")
@@ -182,7 +182,7 @@ test_that("output_cols argument correctly filters columns", {
   )
 
   # Test subset of valid columns
-  result <- standardize_entities(
+  result <- standardize_entity(
     test_df,
     name_col = entity,
     code_col = code,
@@ -201,7 +201,7 @@ test_that("output_cols argument correctly filters columns", {
   )
 
   # Test all valid columns
-  result_all <- standardize_entities(
+  result_all <- standardize_entity(
     test_df,
     name_col = entity,
     code_col = code,
@@ -222,7 +222,7 @@ test_that("output columns are added in correct order", {
   )
 
   # Test with specific output columns
-  result <- standardize_entities(
+  result <- standardize_entity(
     test_df,
     name_col = country,
     output_cols = c("entity_id", "entity_name", "entity_type")
@@ -235,7 +235,7 @@ test_that("output columns are added in correct order", {
   )
 
   # Test with different order
-  result_reversed <- standardize_entities(
+  result_reversed <- standardize_entity(
     test_df,
     name_col = country,
     output_cols = c("entity_type", "entity_name", "entity_id")
@@ -248,7 +248,7 @@ test_that("output columns are added in correct order", {
   )
 
   # Test with single output column
-  result_single <- standardize_entities(
+  result_single <- standardize_entity(
     test_df,
     name_col = country,
     output_cols = "entity_id"
@@ -271,7 +271,7 @@ test_that("handles existing entity columns correctly", {
 
   # Should warn when warn_overwrite = TRUE
   expect_warning(
-    standardize_entities(
+    standardize_entity(
       df,
       name_col = country,
       warn_overwrite = TRUE
@@ -281,7 +281,7 @@ test_that("handles existing entity columns correctly", {
 
   # Should not warn when warn_overwrite = FALSE
   expect_no_warning(
-    standardize_entities(
+    standardize_entity(
       df,
       name_col = country,
       warn_overwrite = FALSE
@@ -290,7 +290,7 @@ test_that("handles existing entity columns correctly", {
 
   # Should actually overwrite the columns
   expect_warning(
-    result <- standardize_entities(df, name_col = country),
+    result <- standardize_entity(df, name_col = country),
     "Overwriting existing entity columns"
   )
   expect_false(identical(df$entity_id, result$entity_id))
