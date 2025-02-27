@@ -174,13 +174,22 @@ standardize_entity <- function(
   # Determine the position of the first target column
   first_target_col_pos <- which(names(results) == target_cols_names[1])
 
-  # Reorder columns to place output columns directly to the left of the first
-  # target column
+  # Get all column names except the output columns and the first target column
+  other_cols <- setdiff(names(results), c(final_cols, target_cols_names[1]))
+
+  # Split other columns into those before and after the first target column
+  cols_before <- other_cols[
+    other_cols %in% names(results)[1:(first_target_col_pos - 1)]
+  ]
+  cols_after <- setdiff(other_cols, cols_before)
+
+  # Reorder columns
   results <- results |>
     dplyr::select(
-      names(results)[(length(output_cols) + 1):(first_target_col_pos - 1)],
-      final_cols,
-      names(results)[(first_target_col_pos):length(names(results))]
+      cols_before,
+      dplyr::all_of(final_cols),
+      dplyr::all_of(target_cols_names),
+      cols_after
     )
 
   results
