@@ -24,7 +24,8 @@ valid_cols <- c(
 #' @param prefix Optional character string to prefix the output column names.
 #'   Useful when standardizing multiple entities in the same dataset (e.g.,
 #'   "country", "counterpart"). If provided, output columns will be named
-#'   prefix_entity_id, prefix_entity_name, etc.
+#'   prefix_entity_id, prefix_entity_name, etc. (with an underscore
+#'   automatically inserted between the prefix and the column name).
 #' @param default_entity_type Character; the default entity type to use for
 #'   entities that do not match any of the patterns. Options are "economy",
 #'   "organization", "aggregate", or "other". If this argument is not supplied,
@@ -40,7 +41,6 @@ valid_cols <- c(
 #'   first target column.
 #'
 #' @examples
-#' \dontrun{
 #' # Standardize a single entity
 #' df <- data.frame(country_name = c("United States", "China"))
 #' standardize_entity(df, target_cols = country_name)
@@ -52,21 +52,19 @@ valid_cols <- c(
 #' )
 #' standardize_entity(df, target_cols = c(country_name, country_code))
 #'
-#' # Standardize multiple entities in sequence with prefixes
+#' # Standardize multiple entities in sequence with a prefix
 #' df <- data.frame(
 #'   country_name = c("United States", "France"),
 #'   counterpart_name = c("China", "Germany")
 #' )
 #' df |>
 #'   standardize_entity(
-#'     target_cols = country_name,
-#'     prefix = "country"
+#'     target_cols = country_name
 #'   ) |>
 #'   standardize_entity(
 #'     target_cols = counterpart_name,
 #'     prefix = "counterpart"
 #'   )
-#' }
 #'
 #' @export
 standardize_entity <- function(
@@ -95,7 +93,7 @@ standardize_entity <- function(
     )
   }
 
-  # Apply prefix to output columns if provided
+  # Apply prefix to output column names if provided
   prefixed_output_cols <- output_cols
   if (!is.null(prefix)) {
     prefixed_output_cols <- paste(prefix, output_cols, sep = "_")
@@ -104,7 +102,8 @@ standardize_entity <- function(
   # Check for existing entity columns
   existing_cols <- intersect(names(data), prefixed_output_cols)
   if (length(existing_cols) > 0) {
-    if (warn_overwrite) {
+    # Ignore warn_overwrite if overwrite is FALSE
+    if (overwrite && warn_overwrite) {
       cli::cli_warn(
         "Overwriting existing entity columns: {.val {existing_cols}}"
       )
@@ -137,15 +136,22 @@ standardize_entity <- function(
       warn_ambiguous = warn_ambiguous
     ))
 
+  # Rename entity_patterns column names by adding prefix if provided
+  entity_patterns <- list_entity_patterns()
+  if (!is.null(prefix)) {
+    names(entity_patterns) <- paste(prefix, names(entity_patterns), sep = "_")
+  }
+
   # Join entity_patterns to the input data
   results <- dplyr::left_join(
     data,
-    list_entity_patterns(),
+    entity_patterns,
     by = c(entity_id = "entity_id")
   )
 
-  # Drop any valid_cols not in the final_cols
-  difference <- setdiff(c(valid_cols, "entity_regex"), final_cols)
+  # Drop any prefixed valid_cols not in the final_cols
+  prefixed_valid_cols <- paste(prefix, valid_cols, sep = "_")
+  difference <- setdiff(c(prefixed_valid_cols, "entity_regex"), final_cols)
   results <- results[, !(names(results) %in% difference)]
 
   # Replace any NA values in entity_name with the value in the first target
@@ -165,46 +171,17 @@ standardize_entity <- function(
     ] <- default_entity_type
   }
 
-  # Apply prefix to output columns if provided
-  if (!is.null(prefix)) {
-    for (col in output_cols) {
-      if (col %in% names(results)) {
-        results[[paste(prefix, col, sep = "_")]] <- results[[col]]
-        results[[col]] <- NULL
-      }
-    }
-  }
-
   # Determine the position of the first target column
   first_target_col_pos <- which(names(results) == target_cols_names[1])
 
   # Reorder columns to place output columns directly to the left of the first
   # target column
-  if (!is.null(prefix)) {
-    output_cols_with_prefix <- paste(prefix, output_cols, sep = "_")
-  } else {
-    output_cols_with_prefix <- output_cols
-  }
-
-  # Get all columns except the output columns
-  other_cols <- setdiff(names(results), output_cols_with_prefix)
-
-  # Create the new column order
-  if (length(first_target_col_pos) > 0 && first_target_col_pos > 1) {
-    # Columns before the first target column
-    before_cols <- other_cols[1:(first_target_col_pos - 1)]
-    # Columns after and including the first target column
-    after_cols <- other_cols[first_target_col_pos:length(other_cols)]
-    # New column order
-    new_col_order <- c(before_cols, output_cols_with_prefix, after_cols)
-  } else {
-    # If the first target column is the first column or not found, place output
-    # columns at the beginning
-    new_col_order <- c(output_cols_with_prefix, other_cols)
-  }
-
-  # Reorder the columns
-  results <- results[, new_col_order]
+  results <- results |>
+    dplyr::select(
+      names(results)[(length(output_cols) + 1):(first_target_col_pos - 1)],
+      final_cols,
+      names(results)[(first_target_col_pos):length(names(results))]
+    )
 
   results
 }
@@ -234,16 +211,24 @@ validate_entity_inputs <- function(
     cli::cli_abort("Input {.var data} must be a data frame or tibble.")
   }
 
-  # Validate column names
+  # Validate target_cols_names
   missing_cols <- setdiff(target_cols_names, names(data))
   if (length(missing_cols) > 0) {
-    cli::cli_abort("Column(s) {.var {missing_cols}} not found in data.")
+    cli::cli_abort(
+      "Target column(s) {.var {missing_cols}} must be found in data."
+    )
   }
 
-  # Validate output_cols
-  invalid_cols <- setdiff(output_cols, valid_cols)
+  # Validate output_cols against prefixed valid_cols
+  prefixed_valid_cols <- paste(prefix, valid_cols, sep = "_")
+  invalid_cols <- setdiff(output_cols, prefixed_valid_cols)
   if (length(invalid_cols) > 0) {
-    cli::cli_abort("Invalid output columns: {.val {invalid_cols}}")
+    cli::cli_abort(
+      paste(
+        "Output columns {.val {invalid_cols}} must be one of",
+        "{.val {prefixed_valid_cols}}"
+      )
+    )
   }
 
   # Validate prefix if provided
