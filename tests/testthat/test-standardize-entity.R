@@ -8,7 +8,7 @@ test_that("basic country standardization works", {
     "NotACountry",    NA
   )
 
-  result <- standardize_entities(test_df, name_col = entity, code_col = code)
+  result <- standardize_entity(test_df, entity, code)
 
   expect_equal(
     result$entity_name,
@@ -20,22 +20,29 @@ test_that("basic country standardization works", {
   )
 })
 
-test_that("ISO code matching takes precedence", {
+test_that("column order prioritizes matches from earlier columns", {
   test_df <- tibble::tribble(
     ~name,    ~code,
     "USA",    "FRA",
     "France", NA
   )
 
-  # Should prefer ISO code match but raise a warning
+  # Should prefer first column match but raise a warning for ambiguous match
   expect_warning(
-    result <- standardize_entities(test_df, name_col = name, code_col = code),
+    result <- standardize_entity(test_df, name, code),
     "Ambiguous match"
   )
-  expect_equal(result$entity_id, c("FRA", "FRA"))
+  expect_equal(result$entity_id, c("USA", "FRA"))
+
+  # Reversing column order should change the results
+  expect_warning(
+    result2 <- standardize_entity(test_df, code, name),
+    "Ambiguous match"
+  )
+  expect_equal(result2$entity_id, c("FRA", "FRA"))
 })
 
-test_that("standardization works without code column", {
+test_that("standardization works with a single target column", {
   test_df <- tibble::tribble(
     ~country,
     "United States",
@@ -43,7 +50,7 @@ test_that("standardization works without code column", {
     "NotACountry"
   )
 
-  result <- standardize_entities(test_df, name_col = country)
+  result <- standardize_entity(test_df, country)
 
   expect_equal(result$entity_name, c("United States", "France", "NotACountry"))
   expect_equal(result$entity_id, c("USA", "FRA", NA_character_))
@@ -57,22 +64,22 @@ test_that("standardization fails with invalid output columns", {
 
   # Test single invalid column
   expect_error(
-    standardize_entities(
+    standardize_entity(
       test_df,
-      name_col = country,
+      country,
       output_cols = "invalid_col"
     ),
-    "Invalid output columns: \"invalid_col\""
+    "Output columns"
   )
 
   # Test mix of valid and invalid columns
   expect_error(
-    standardize_entities(
+    standardize_entity(
       test_df,
-      name_col = country,
+      country,
       output_cols = c("entity_name", "bad_col", "worse_col")
     ),
-    "Invalid output columns: \"bad_col\" and \"worse_col\""
+    "Output columns"
   )
 })
 
@@ -107,6 +114,37 @@ test_that("match_entity_ids prioritizes code matches over name matches", {
 
   # Should match the codes rather than the names
   expect_equal(result, c("FRA", "USA"))
+})
+
+test_that("match_entity_ids_multi handles multiple target columns", {
+  test_df <- tibble::tribble(
+    ~name,           ~code,    ~abbr,
+    "United States", NA,       "US",
+    NA,              "FRA",    NA,
+    "Unknown",       "Unknown", "UNK"
+  )
+
+  # Should try each column in sequence
+  result <- match_entity_ids_multi(
+    test_df,
+    "name",
+    "code",
+    "abbr",
+    warn_ambiguous = TRUE
+  )
+
+  expect_equal(result, c("USA", "FRA", NA_character_))
+
+  # Changing column order should affect results for the first row
+  result2 <- match_entity_ids_multi(
+    test_df,
+    "abbr",
+    "name",
+    "code",
+    warn_ambiguous = TRUE
+  )
+
+  expect_equal(result2, c("USA", "FRA", NA_character_))
 })
 
 test_that("match_entity_ids warns on ambiguous matches", {
@@ -182,10 +220,10 @@ test_that("output_cols argument correctly filters columns", {
   )
 
   # Test subset of valid columns
-  result <- standardize_entities(
+  result <- standardize_entity(
     test_df,
-    name_col = entity,
-    code_col = code,
+    entity,
+    code,
     output_cols = c("entity_id", "iso3c")
   )
 
@@ -201,10 +239,10 @@ test_that("output_cols argument correctly filters columns", {
   )
 
   # Test all valid columns
-  result_all <- standardize_entities(
+  result_all <- standardize_entity(
     test_df,
-    name_col = entity,
-    code_col = code,
+    entity,
+    code,
     output_cols = valid_cols
   )
 
@@ -222,22 +260,22 @@ test_that("output columns are added in correct order", {
   )
 
   # Test with specific output columns
-  result <- standardize_entities(
+  result <- standardize_entity(
     test_df,
-    name_col = country,
+    country,
     output_cols = c("entity_id", "entity_name", "entity_type")
   )
 
-  # Verify new columns are added to the left in specified order
+  # Verify new columns are added to the left of target column in specified order
   expect_equal(
     names(result),
     c("entity_id", "entity_name", "entity_type", "country")
   )
 
   # Test with different order
-  result_reversed <- standardize_entities(
+  result_reversed <- standardize_entity(
     test_df,
-    name_col = country,
+    country,
     output_cols = c("entity_type", "entity_name", "entity_id")
   )
 
@@ -248,9 +286,9 @@ test_that("output columns are added in correct order", {
   )
 
   # Test with single output column
-  result_single <- standardize_entities(
+  result_single <- standardize_entity(
     test_df,
-    name_col = country,
+    country,
     output_cols = "entity_id"
   )
 
@@ -271,9 +309,9 @@ test_that("handles existing entity columns correctly", {
 
   # Should warn when warn_overwrite = TRUE
   expect_warning(
-    standardize_entities(
+    standardize_entity(
       df,
-      name_col = country,
+      country,
       warn_overwrite = TRUE
     ),
     "Overwriting existing entity columns"
@@ -281,18 +319,102 @@ test_that("handles existing entity columns correctly", {
 
   # Should not warn when warn_overwrite = FALSE
   expect_no_warning(
-    standardize_entities(
+    standardize_entity(
       df,
-      name_col = country,
+      target_cols = country,
       warn_overwrite = FALSE
     )
   )
 
   # Should actually overwrite the columns
   expect_warning(
-    result <- standardize_entities(df, name_col = country),
+    result <- standardize_entity(df, target_cols = country),
     "Overwriting existing entity columns"
   )
   expect_false(identical(df$entity_id, result$entity_id))
   expect_false(identical(df$entity_name, result$entity_name))
+})
+
+test_that("prefix parameter works correctly", {
+  test_df <- tibble::tribble(
+    ~country_name, ~counterpart_name,
+    "USA",         "France",
+    "Germany",     "Italy"
+  )
+
+  # Test with prefix
+  result <- test_df |>
+    standardize_entity(
+      country_name,
+      prefix = "country"
+    ) |>
+    standardize_entity(
+      counterpart_name,
+      prefix = "counterpart"
+    )
+
+  # Check that prefixed columns exist
+  expect_true(all(c(
+    "country_entity_id", "country_entity_name", "country_entity_type",
+    "counterpart_entity_id", "counterpart_entity_name",
+    "counterpart_entity_type"
+  ) %in% names(result)))
+
+  # Check that values are correct
+  expect_equal(result$country_entity_id, c("USA", "DEU"))
+  expect_equal(result$counterpart_entity_id, c("FRA", "ITA"))
+})
+
+test_that("default_entity_type parameter works correctly", {
+  test_df <- tibble::tribble(
+    ~entity,
+    "United States",
+    "NotACountry"
+  )
+
+  # Test with default_entity_type
+  result <- standardize_entity(
+    test_df,
+    entity,
+    default_entity_type = "other"
+  )
+
+  # Check that entity_type is set correctly
+  expect_equal(result$entity_type, c("economy", "other"))
+
+  # Test with different default_entity_type
+  result2 <- standardize_entity(
+    test_df,
+    entity,
+    default_entity_type = "organization"
+  )
+
+  # Check that entity_type is set correctly
+  expect_equal(result2$entity_type, c("economy", "organization"))
+})
+
+test_that("column placement works with multiple target columns", {
+  # Create a test dataframe with columns in a specific order
+  test_df <- tibble::tibble(
+    id = 1:2,
+    extra1 = c("a", "b"),
+    name = c("United States", "France"),
+    code = c("USA", "FRA"),
+    extra2 = c("x", "y")
+  )
+
+  # Standardize with multiple target columns
+  result <- standardize_entity(
+    test_df,
+    name,
+    code
+  )
+
+  # Check that output columns are placed directly to the left of the first
+  # target column
+  expected_order <- c(
+    "id", "extra1", "entity_id", "entity_name",
+    "entity_type", "name", "code", "extra2"
+  )
+  expect_equal(names(result), expected_order)
 })

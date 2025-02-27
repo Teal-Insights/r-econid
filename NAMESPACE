@@ -2,4 +2,4 @@
 
 export(add_entity_pattern)
 export(list_entity_patterns)
-export(standardize_entities)
+export(standardize_entity)
