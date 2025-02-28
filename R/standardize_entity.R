@@ -176,11 +176,8 @@ standardize_entity <- function(
 
   # Reorder columns
   results <- results |>
-    dplyr::select(
-      dplyr::all_of(cols_before),
-      dplyr::all_of(final_cols),
-      dplyr::all_of(target_cols_names),
-      dplyr::all_of(cols_after)
+    dplyr::relocate(
+      dplyr::any_of(prefixed_output_cols), .before = target_cols_names[1]
     )
 
   results
