@@ -26,6 +26,12 @@ valid_cols <- c(
 #'   "country", "counterpart"). If provided, output columns will be named
 #'   prefix_entity_id, prefix_entity_name, etc. (with an underscore
 #'   automatically inserted between the prefix and the column name).
+#' @param fill_mapping Named character vector specifying how to fill missing
+#'   values when no entity match is found. Names should be output column names
+#'   (without prefix), and values should be input column names (from `...`).
+#'   For example, `c(entity_id = "country_code", entity_name = "country_name")`
+#'   will fill missing entity_id values with values from the country_code column
+#'   and missing entity_name values with values from the country_name column.
 #' @param default_entity_type Character; the default entity type to use for
 #'   entities that do not match any of the patterns. Options are "economy",
 #'   "organization", "aggregate", or "other". If this argument is not supplied,
@@ -57,6 +63,13 @@ valid_cols <- c(
 #'
 #' standardize_entity(test_df, entity, code)
 #'
+#' # Standardize with fill_mapping for unmatched entities
+#' standardize_entity(
+#'   test_df,
+#'   entity, code,
+#'   fill_mapping = c(entity_id = "code", entity_name = "entity")
+#' )
+#'
 #' # Standardize multiple entities in sequence with a prefix
 #' df <- data.frame(
 #'   country_name = c("United States", "France"),
@@ -77,6 +90,7 @@ standardize_entity <- function(
   ...,
   output_cols = c("entity_id", "entity_name", "entity_type"),
   prefix = NULL,
+  fill_mapping = NULL,
   default_entity_type = NA_character_,
   warn_ambiguous = TRUE,
   overwrite = TRUE,
@@ -94,7 +108,8 @@ standardize_entity <- function(
     data,
     target_cols_names,
     output_cols,
-    prefix
+    prefix,
+    fill_mapping
   )
 
   # Apply prefix to output column names if provided
@@ -132,7 +147,7 @@ standardize_entity <- function(
 
   # Use regex match to add a column of entity_ids to the data
   prefixed_entity_id_col <- names(entity_patterns)[1]
-  data[prefixed_entity_id_col] <- match_entity_ids_multi(
+  data[prefixed_entity_id_col] <- match_entity_ids(
     data = data,
     target_cols = target_cols_names,
     warn_ambiguous = warn_ambiguous
@@ -149,14 +164,29 @@ standardize_entity <- function(
   difference <- setdiff(names(entity_patterns), prefixed_output_cols)
   results <- results[, !(names(results) %in% difference)]
 
-  # Replace any NA values in entity_name with the value in the first target
-  # column
-  if (valid_cols["entity_name"] %in% output_cols) {
-    prefixed_entity_name <- prefixed_output_cols[output_cols == "entity_name"]
-    results[[prefixed_entity_name]] <- tidyr::replace_na(
-      results[[prefixed_entity_name]],
-      data[[target_cols_names[1]]]
-    )
+  # Apply fill_mapping for rows with no matches
+  if (!is.null(fill_mapping)) {
+    # Get rows with no matches
+    no_match_mask <- is.na(results[[prefixed_entity_id_col]])
+
+    # Apply each mapping
+    for (output_col in names(fill_mapping)) {
+      input_col <- fill_mapping[[output_col]]
+      prefixed_output <- if (!is.null(prefix)) {
+        paste(prefix, output_col, sep = "_") 
+      } else {
+        output_col
+      }
+
+      # Only apply mapping if output column exists
+      if (prefixed_output %in% names(results)) {
+        # Fill NA values in the output column with values from the input column
+        # but only for rows with no matches
+        results[no_match_mask, prefixed_output] <- results[
+          no_match_mask, input_col
+        ]
+      }
+    }
   }
 
   # Replace any NA values in entity_type with the default_entity_type
@@ -173,7 +203,6 @@ standardize_entity <- function(
 
   # Reorder columns
   if (!rlang::quo_is_null(rlang::enquo(.before))) {
-    print("You are here")
     results <- results |>
       dplyr::relocate(
         dplyr::any_of(prefixed_output_cols), .before = {{ .before }}
@@ -198,6 +227,8 @@ standardize_entity <- function(
 #'   identifiers
 #' @param output_cols Character vector of requested output columns
 #' @param prefix Optional character string to prefix the output column names
+#' @param fill_mapping Named character vector specifying how to fill missing
+#'   values
 #'
 #' @return Invisible NULL
 #'
@@ -206,7 +237,8 @@ validate_entity_inputs <- function(
   data,
   target_cols_names,
   output_cols,
-  prefix
+  prefix,
+  fill_mapping = NULL
 ) {
   # Validate data frame
   if (!is.data.frame(data)) {
@@ -236,6 +268,33 @@ validate_entity_inputs <- function(
   if (!is.null(prefix)) {
     if (!is.character(prefix) || length(prefix) != 1) {
       cli::cli_abort("Prefix must be a single character string.")
+    }
+  }
+
+  # Validate fill_mapping if provided
+  if (!is.null(fill_mapping)) {
+    # Check it's a named character vector
+    if (!is.character(fill_mapping) || is.null(names(fill_mapping)) ||
+          any(names(fill_mapping) == "")) {
+      cli::cli_abort("fill_mapping must be a named character vector.")
+    }
+
+    # Check that all names in fill_mapping are valid output column names
+    invalid_output_names <- setdiff(names(fill_mapping), valid_cols)
+    if (length(invalid_output_names) > 0) {
+      cli::cli_abort(paste(
+        "fill_mapping names {.val {invalid_output_names}} must be valid output",
+        "column names: {.val {valid_cols}}"
+      ))
+    }
+
+    # Check that all values in fill_mapping exist in the data
+    missing_input_cols <- setdiff(fill_mapping, names(data))
+    if (length(missing_input_cols) > 0) {
+      cli::cli_abort(paste(
+        "fill_mapping values {.val {missing_input_cols}} must be columns",
+        "in the data frame."
+      ))
     }
   }
 
@@ -290,7 +349,7 @@ try_regex_match <- function(name) {
 #' @return A vector of entity ids
 #'
 #' @keywords internal
-match_entity_ids_multi <- function(
+match_entity_ids <- function(
   data,
   target_cols,
   warn_ambiguous = TRUE

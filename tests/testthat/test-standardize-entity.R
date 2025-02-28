@@ -112,7 +112,7 @@ test_that("try_regex_match performs case-insensitive matching", {
   expect_equal(try_regex_match("FRA"), "FRA")
 })
 
-test_that("match_entity_ids_multi handles multiple target columns", {
+test_that("match_entity_ids handles multiple target columns", {
   test_df <- tibble::tribble(
     ~name,           ~code,    ~abbr,
     "United States", NA,       "US",
@@ -121,7 +121,7 @@ test_that("match_entity_ids_multi handles multiple target columns", {
   )
 
   # Should try each column in sequence
-  result <- match_entity_ids_multi(
+  result <- match_entity_ids(
     test_df,
     target_cols = c("name", "code", "abbr"),
     warn_ambiguous = TRUE
@@ -130,7 +130,7 @@ test_that("match_entity_ids_multi handles multiple target columns", {
   expect_equal(result, c("USA", "FRA", NA_character_))
 
   # Changing column order should affect results for the first row
-  result2 <- match_entity_ids_multi(
+  result2 <- match_entity_ids(
     test_df,
     target_cols = c("abbr", "name", "code"),
     warn_ambiguous = TRUE
@@ -396,6 +396,149 @@ test_that(".before parameter works correctly", {
     ),
     "Can't select columns that don't exist"
   )
+})
+
+test_that("fill_mapping parameter works correctly", {
+  test_df <- tibble::tribble(
+    ~entity,         ~code,
+    "United States",  "USA",  # Should match via patterns
+    "NotACountry",    "ABC"   # No match, should use fill_mapping
+  )
+
+  # Test with fill_mapping
+  result <- standardize_entity(
+    test_df,
+    entity, code,
+    fill_mapping = c(entity_id = "code", entity_name = "entity")
+  )
+
+  # Check that matched entities are filled from the database
+  expect_equal(result$entity_id[1], "USA")
+  expect_equal(result$entity_name[1], "United States")
+
+  # Check that unmatched entities are filled from the specified columns
+  expect_equal(result$entity_id[2], "ABC")
+  expect_equal(result$entity_name[2], "NotACountry")
+
+  # Test without fill_mapping (should leave NA for unmatched)
+  result_no_fill <- standardize_entity(
+    test_df,
+    entity, code
+  )
+
+  expect_equal(result_no_fill$entity_id[2], NA_character_)
+  expect_equal(result_no_fill$entity_name[2], NA_character_)
+
+  # Test with partial fill_mapping
+  result_partial <- standardize_entity(
+    test_df,
+    entity, code,
+    fill_mapping = c(entity_id = "code")  # Only fill entity_id
+  )
+
+  expect_equal(result_partial$entity_id[2], "ABC")  # Should be filled
+  expect_equal(result_partial$entity_name[2], NA_character_)  # Should remain NA
+})
+
+test_that("fill_mapping works with prefix", {
+  test_df <- tibble::tribble(
+    ~country_name, ~country_code,
+    "United States", "USA",  # Should match
+    "Unknown",       "XYZ"   # No match
+  )
+
+  # Test with prefix and fill_mapping
+  result <- standardize_entity(
+    test_df,
+    country_name, country_code,
+    prefix = "country",
+    fill_mapping = c(entity_id = "country_code", entity_name = "country_name")
+  )
+
+  # Check prefixed column values
+  expect_equal(result$country_entity_id[1], "USA")  # Matched
+  expect_equal(result$country_entity_name[1], "United States")  # Matched
+
+  expect_equal(result$country_entity_id[2], "XYZ")  # Filled from mapping
+  expect_equal(result$country_entity_name[2], "Unknown")  # Filled from mapping
+})
+
+test_that("fill_mapping validation works", {
+  test_df <- tibble::tribble(
+    ~entity, ~code,
+    "US",    "USA"
+  )
+
+  # Invalid output column name
+  expect_error(
+    standardize_entity(
+      test_df,
+      entity, code,
+      fill_mapping = c(invalid_col = "code")
+    ),
+    "fill_mapping names.*must be valid output column names"
+  )
+
+  # Invalid input column name
+  expect_error(
+    standardize_entity(
+      test_df,
+      entity, code,
+      fill_mapping = c(entity_id = "missing_column")
+    ),
+    "fill_mapping values.*must be columns in the data frame"
+  )
+
+  # Not a named vector
+  expect_error(
+    standardize_entity(
+      test_df,
+      entity, code,
+      fill_mapping = c("entity", "code")
+    ),
+    "fill_mapping must be a named character vector"
+  )
+})
+
+test_that("fill_mapping handles empty and partial vectors correctly", {
+  test_df <- tibble::tribble(
+    ~entity,         ~code,
+    "United States",  "USA",  # Should match via patterns
+    "NotACountry",    "ABC"   # No match, should use fill_mapping
+  )
+
+  # Test with empty fill_mapping vector
+  result_empty <- standardize_entity(
+    test_df,
+    entity, code,
+    fill_mapping = c()
+  )
+
+  # Should behave the same as NULL (no filling)
+  expect_equal(result_empty$entity_id[2], NA_character_)
+  expect_equal(result_empty$entity_name[2], NA_character_)
+
+  # Test with only entity_id in fill_mapping
+  result_id_only <- standardize_entity(
+    test_df,
+    entity, code,
+    fill_mapping = c(entity_id = "code")
+  )
+
+  # Should fill entity_id but not entity_name
+  expect_equal(result_id_only$entity_id[2], "ABC")
+  expect_equal(result_id_only$entity_name[2], NA_character_)
+
+  # Test with only entity_name in fill_mapping
+  result_name_only <- standardize_entity(
+    test_df,
+    entity, code,
+    fill_mapping = c(entity_name = "entity")
+  )
+
+  # Should fill entity_name but not entity_id
+  expect_equal(result_name_only$entity_id[2], NA_character_)
+  expect_equal(result_name_only$entity_name[2], "NotACountry")
 })
 
 # TODO: Ambiguity tests
