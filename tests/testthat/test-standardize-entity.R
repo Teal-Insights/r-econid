@@ -46,9 +46,9 @@ test_that("unmatched entities are not filled from existing cols by default", {
 
 test_that("column order prioritizes matches from earlier columns", {
   test_df <- tibble::tribble(
-    ~name, ~code,
+    ~name,           ~code,
     "United States", "FRA",
-    "France", NA
+    "France",        NA
   )
 
   # Should prefer first column match

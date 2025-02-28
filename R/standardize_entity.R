@@ -85,7 +85,7 @@ standardize_entity <- function(
   target_cols_names <- purrr::map_chr(target_cols_syms, rlang::as_name)
 
   # Validate inputs
-  final_cols <- validate_entity_inputs(
+  validate_entity_inputs(
     data,
     target_cols_names,
     output_cols,
@@ -140,25 +140,30 @@ standardize_entity <- function(
     by = c(prefixed_entity_id_col)
   )
 
-  # Drop any entity_patterns cols not in the final_cols
-  difference <- setdiff(names(entity_patterns), final_cols)
+  # Drop any entity_patterns cols not in the prefixed_output_cols
+  difference <- setdiff(names(entity_patterns), prefixed_output_cols)
   results <- results[, !(names(results) %in% difference)]
 
   # Replace any NA values in entity_name with the value in the first target
   # column
   if (valid_cols["entity_name"] %in% output_cols) {
-    results[valid_cols["entity_name"]][
-      is.na(results[valid_cols["entity_name"]])
-    ] <- data[[target_cols_names[1]]][
-      is.na(results[valid_cols["entity_name"]])
-    ]
+    prefixed_entity_name <- prefixed_output_cols[output_cols == "entity_name"]
+    results[[prefixed_entity_name]] <- tidyr::replace_na(
+      results[[prefixed_entity_name]],
+      data[[target_cols_names[1]]]
+    )
   }
 
   # Replace any NA values in entity_type with the default_entity_type
-  if (valid_cols["entity_type"] %in% output_cols) {
-    results[valid_cols["entity_type"]][
-      is.na(results[valid_cols["entity_type"]])
-    ] <- default_entity_type
+  if ("entity_type" %in% output_cols) {
+    prefixed_entity_type <- prefixed_output_cols[output_cols == "entity_type"]
+
+    # Make sure we're working with the correct column name
+    if (prefixed_entity_type %in% names(results)) {
+      results[[prefixed_entity_type]] <- tidyr::replace_na(
+        results[[prefixed_entity_type]], default_entity_type
+      )
+    }
   }
 
   # Reorder columns
@@ -181,7 +186,7 @@ standardize_entity <- function(
 #' @param output_cols Character vector of requested output columns
 #' @param prefix Optional character string to prefix the output column names
 #'
-#' @return Character vector of validated and prefixed output columns
+#' @return Invisible NULL
 #'
 #' @keywords internal
 validate_entity_inputs <- function(
@@ -203,7 +208,7 @@ validate_entity_inputs <- function(
     )
   }
 
-  # Validate output_cols against prefixed valid_cols
+  # Validate output_cols against valid_cols
   invalid_cols <- setdiff(output_cols, valid_cols)
   if (length(invalid_cols) > 0) {
     cli::cli_abort(
@@ -215,15 +220,14 @@ validate_entity_inputs <- function(
   }
 
   # Validate prefix if provided
-  final_cols <- output_cols
   if (!is.null(prefix)) {
     if (!is.character(prefix) || length(prefix) != 1) {
       cli::cli_abort("Prefix must be a single character string.")
     }
-    final_cols <- paste(prefix, output_cols, sep="_")
   }
 
-  final_cols
+  # No return value needed
+  invisible(NULL)
 }
 
 #' Try Regex Pattern Match
