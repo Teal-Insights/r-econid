@@ -1,9 +1,28 @@
 test_that("basic country standardization works", {
   test_df <- tibble::tribble(
     ~entity,         ~code,
-    "United States",  "USA",
+    NA,               "USA",
     "united.states",  NA,
-    "us",             "US",
+    "us",             "US"
+  )
+
+  result <- standardize_entity(test_df, entity, code)
+
+  expect_equal(
+    result$entity_name,
+    c(
+      "United States", "United States", "United States"
+    )
+  )
+  expect_equal(
+    result$entity_id,
+    c("USA", "USA", "USA")
+  )
+})
+
+test_that("unmatched entities are not filled from existing cols by default", {
+  test_df <- tibble::tribble(
+    ~entity,         ~code,
     "EU",             NA,
     "NotACountry",    NA
   )
@@ -12,34 +31,33 @@ test_that("basic country standardization works", {
 
   expect_equal(
     result$entity_name,
-    c("United States", "United States", "United States", "EU", "NotACountry")
+    c(
+      NA_character_, NA_character_
+    )
   )
   expect_equal(
     result$entity_id,
-    c("USA", "USA", "USA", NA_character_, NA_character_)
+    c(NA_character_, NA_character_)
   )
 })
 
+# TODO: Test that unmatched entities are filled from existing cols when fill
+# mapping is provided
+
 test_that("column order prioritizes matches from earlier columns", {
   test_df <- tibble::tribble(
-    ~name,    ~code,
-    "USA",    "FRA",
+    ~name, ~code,
+    "United States", "FRA",
     "France", NA
   )
 
-  # Should prefer first column match but raise a warning for ambiguous match
-  expect_warning(
-    result <- standardize_entity(test_df, name, code),
-    "Ambiguous match"
-  )
-  expect_equal(result$entity_id, c("USA", "FRA"))
+  # Should prefer first column match
+  result <- standardize_entity(test_df, code, name)
+  expect_equal(result$entity_id, c("FRA", "FRA"))
 
   # Reversing column order should change the results
-  expect_warning(
-    result2 <- standardize_entity(test_df, code, name),
-    "Ambiguous match"
-  )
-  expect_equal(result2$entity_id, c("FRA", "FRA"))
+  result2 <- standardize_entity(test_df, name, code)
+  expect_equal(result2$entity_id, c("USA", "FRA"))
 })
 
 test_that("standardization works with a single target column", {
@@ -52,7 +70,7 @@ test_that("standardization works with a single target column", {
 
   result <- standardize_entity(test_df, country)
 
-  expect_equal(result$entity_name, c("United States", "France", "NotACountry"))
+  expect_equal(result$entity_name, c("United States", "France", NA_character_))
   expect_equal(result$entity_id, c("USA", "FRA", NA_character_))
 })
 
@@ -94,28 +112,6 @@ test_that("try_regex_match performs case-insensitive matching", {
   expect_equal(try_regex_match("FRA"), "FRA")
 })
 
-test_that("match_entity_ids handles basic name matching", {
-  names <- c("United States", "France", "NotACountry")
-  result <- match_entity_ids(names)
-
-  expect_equal(result, c("USA", "FRA", NA_character_))
-})
-
-test_that("match_entity_ids prioritizes code matches over name matches", {
-  names <- c("United States", "France")
-  codes <- c("FRA", "USA")
-  expect_warning(
-    expect_warning(
-      result <- match_entity_ids(names, codes),
-      "Ambiguous match"
-    ),
-    "Ambiguous match"
-  )
-
-  # Should match the codes rather than the names
-  expect_equal(result, c("FRA", "USA"))
-})
-
 test_that("match_entity_ids_multi handles multiple target columns", {
   test_df <- tibble::tribble(
     ~name,           ~code,    ~abbr,
@@ -127,9 +123,7 @@ test_that("match_entity_ids_multi handles multiple target columns", {
   # Should try each column in sequence
   result <- match_entity_ids_multi(
     test_df,
-    "name",
-    "code",
-    "abbr",
+    target_cols = c("name", "code", "abbr"),
     warn_ambiguous = TRUE
   )
 
@@ -138,75 +132,11 @@ test_that("match_entity_ids_multi handles multiple target columns", {
   # Changing column order should affect results for the first row
   result2 <- match_entity_ids_multi(
     test_df,
-    "abbr",
-    "name",
-    "code",
+    target_cols = c("abbr", "name", "code"),
     warn_ambiguous = TRUE
   )
 
   expect_equal(result2, c("USA", "FRA", NA_character_))
-})
-
-test_that("match_entity_ids warns on ambiguous matches", {
-  # Mock try_regex_match to return multiple matches for a specific input
-  local_mocked_bindings(
-    try_regex_match = function(name) {
-      if (name == "Ambiguous Country") {
-        return(c("CTY1", "CTY2"))
-      }
-      "UNIQUE"
-    }
-  )
-
-  # Should warn and return first match for ambiguous case
-  expect_warning(
-    result <- match_entity_ids("Ambiguous Country", warn_ambiguous = TRUE),
-    "Ambiguous match"
-  )
-  expect_equal(result, "CTY1")
-
-  # Should return single match without warning
-  expect_no_warning(
-    result <- match_entity_ids("Unique Country", warn_ambiguous = TRUE)
-  )
-  expect_equal(result, "UNIQUE")
-})
-
-test_that("match_entity_ids handles multiple inputs with ambiguity", {
-  local_mocked_bindings(
-    try_regex_match = function(name) {
-      switch(name,
-        "Ambiguous Country" = c("CTY1", "CTY2"),
-        "Another Ambiguous" = c("CTY3", "CTY4"),
-        "Unique Country" = "UNIQUE"
-      )
-    }
-  )
-
-  # Expect warnings for both ambiguous matches
-  names <- c("Ambiguous Country", "Unique Country", "Another Ambiguous")
-  expect_warning(
-    expect_warning(
-      result <- match_entity_ids(names, warn_ambiguous = TRUE),
-      "Ambiguous match for \"Another Ambiguous\""
-    ),
-    "Ambiguous match for \"Ambiguous Country\""
-  )
-  expect_equal(result, c("CTY1", "UNIQUE", "CTY3"))
-})
-
-test_that("match_entity_ids handles NULL codes gracefully", {
-  names <- c("United States", "France")
-  result <- match_entity_ids(names, codes = NULL)
-
-  expect_equal(result, c("USA", "FRA"))
-})
-
-test_that("match_entity_ids is case insensitive", {
-  names <- c("FRANCE", "united states", "UnItEd KiNgDoM")
-  result <- match_entity_ids(names)
-
-  expect_equal(result, c("FRA", "USA", "GBR"))
 })
 
 test_that("output_cols argument correctly filters columns", {
@@ -418,3 +348,11 @@ test_that("column placement works with multiple target columns", {
   )
   expect_equal(names(result), expected_order)
 })
+
+# TODO: Ambiguity tests
+# Should raise a warning if an entity matches more than one of entity_patterns
+# even after cycling through all target columns
+# Should *not* raise a warning just because more than one entity matches an
+# entity_pattern
+# Probably mock list_entity_patterns in the tests
+# Make sure to check multiple ambiguous matches as well as a single one

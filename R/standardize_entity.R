@@ -119,60 +119,47 @@ standardize_entity <- function(
     data[[col]] <- enc2utf8(as.character(data[[col]]))
   }
 
-  # Use regex match to add a column of entity_ids to the data
-  data <- data |>
-    dplyr::mutate(entity_id = match_entity_ids_multi(
-      data = data,
-      target_cols = target_cols_names,
-      warn_ambiguous = warn_ambiguous
-    ))
-
   # Rename entity_patterns column names by adding prefix if provided
   entity_patterns <- list_entity_patterns()
   if (!is.null(prefix)) {
     names(entity_patterns) <- paste(prefix, names(entity_patterns), sep = "_")
   }
 
+  # Use regex match to add a column of entity_ids to the data
+  prefixed_entity_id_col <- names(entity_patterns)[1]
+  data[prefixed_entity_id_col] <- match_entity_ids_multi(
+    data = data,
+    target_cols = target_cols_names,
+    warn_ambiguous = warn_ambiguous
+  )
+
   # Join entity_patterns to the input data
   results <- dplyr::left_join(
     data,
     entity_patterns,
-    by = c(entity_id = "entity_id")
+    by = c(prefixed_entity_id_col)
   )
 
-  # Drop any prefixed valid_cols not in the final_cols
-  prefixed_valid_cols <- paste(prefix, valid_cols, sep = "_")
-  difference <- setdiff(c(prefixed_valid_cols, "entity_regex"), final_cols)
+  # Drop any entity_patterns cols not in the final_cols
+  difference <- setdiff(names(entity_patterns), final_cols)
   results <- results[, !(names(results) %in% difference)]
 
   # Replace any NA values in entity_name with the value in the first target
   # column
-  if ("entity_name" %in% output_cols) {
-    results$entity_name[
-      is.na(results$entity_name)
+  if (valid_cols["entity_name"] %in% output_cols) {
+    results[valid_cols["entity_name"]][
+      is.na(results[valid_cols["entity_name"]])
     ] <- data[[target_cols_names[1]]][
-      is.na(results$entity_name)
+      is.na(results[valid_cols["entity_name"]])
     ]
   }
 
   # Replace any NA values in entity_type with the default_entity_type
-  if ("entity_type" %in% output_cols) {
-    results$entity_type[
-      is.na(results$entity_type)
+  if (valid_cols["entity_type"] %in% output_cols) {
+    results[valid_cols["entity_type"]][
+      is.na(results[valid_cols["entity_type"]])
     ] <- default_entity_type
   }
-
-  # Determine the position of the first target column
-  first_target_col_pos <- which(names(results) == target_cols_names[1])
-
-  # Get all column names except the output columns and the first target column
-  other_cols <- setdiff(names(results), c(final_cols, target_cols_names[1]))
-
-  # Split other columns into those before and after the first target column
-  cols_before <- other_cols[
-    other_cols %in% names(results)[1:(first_target_col_pos - 1)]
-  ]
-  cols_after <- setdiff(other_cols, cols_before)
 
   # Reorder columns
   results <- results |>
@@ -194,7 +181,7 @@ standardize_entity <- function(
 #' @param output_cols Character vector of requested output columns
 #' @param prefix Optional character string to prefix the output column names
 #'
-#' @return Character vector of validated output columns
+#' @return Character vector of validated and prefixed output columns
 #'
 #' @keywords internal
 validate_entity_inputs <- function(
@@ -228,74 +215,15 @@ validate_entity_inputs <- function(
   }
 
   # Validate prefix if provided
+  final_cols <- output_cols
   if (!is.null(prefix)) {
     if (!is.character(prefix) || length(prefix) != 1) {
       cli::cli_abort("Prefix must be a single character string.")
     }
+    final_cols <- paste(prefix, output_cols, sep="_")
   }
 
-  output_cols
-}
-
-#' Match entity Ids
-#'
-#' @description
-#' Given vectors of names and codes, match them against a list of patterns and
-#' return a vector of entity ids.
-#'
-#' @param names Character vector of entity names to standardize
-#' @param codes Optional character vector of entity codes
-#' @param warn_ambiguous Logical; whether to warn about ambiguous matches
-#'
-#' @return A vector of entity ids
-#'
-#' @keywords internal
-match_entity_ids <- function(
-  names,
-  codes = NULL,
-  warn_ambiguous = TRUE
-) {
-  # Initialize results
-  results <- c()
-
-  # Process each name
-  for (i in seq_along(names)) {
-    current_name <- names[i]
-    current_code <- if (!is.null(codes)) {
-      codes[i]
-    } else {
-      NULL
-    }
-
-    # Try to match the current code (if provided)
-    if (!is.null(current_code)) {
-      code_match_results <- try_regex_match(current_code)
-    } else {
-      code_match_results <- c()
-    }
-
-    # Try to match the current name
-    name_match_results <- try_regex_match(current_name)
-
-    # Take the union of the two match results
-    match_results <- unique(c(code_match_results, name_match_results))
-
-    # Warn if there are multiple matches
-    if (warn_ambiguous && length(match_results) > 1) {
-      cli::cli_warn(c(
-        "!" = "Ambiguous match for {.val {current_name}}",
-        "*" = paste(
-          "Matches multiple patterns:",
-          paste(match_results, collapse = ", ")
-        )
-      ))
-    }
-
-    # Add the first match result to the results vector
-    results <- append(results, match_results[1])
-  }
-
-  results
+  final_cols
 }
 
 #' Try Regex Pattern Match
