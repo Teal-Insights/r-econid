@@ -323,7 +323,7 @@ test_that("default_entity_type parameter works correctly", {
   expect_equal(result2$entity_type, c("economy", "organization"))
 })
 
-test_that("column placement works with multiple target columns", {
+test_that("column placement works without .before", {
   # Create a test dataframe with columns in a specific order
   test_df <- tibble::tibble(
     id = 1:2,
@@ -333,20 +333,69 @@ test_that("column placement works with multiple target columns", {
     extra2 = c("x", "y")
   )
 
-  # Standardize with multiple target columns
+  # Standardize with multiple target columns *without* .before
   result <- standardize_entity(
     test_df,
     name,
     code
   )
 
-  # Check that output columns are placed directly to the left of the first
-  # target column
+  # Check that output columns are placed at the left side of the dataframe
+  # (default behavior)
   expected_order <- c(
-    "id", "extra1", "entity_id", "entity_name",
-    "entity_type", "name", "code", "extra2"
+    "entity_id", "entity_name", "entity_type",
+    "id", "extra1", "name", "code", "extra2"
   )
   expect_equal(names(result), expected_order)
+})
+
+test_that(".before parameter works correctly", {
+  # Create a test dataframe with columns in a specific order
+  test_df <- tibble::tibble(
+    id = 1:2,
+    extra1 = c("a", "b"),
+    name = c("United States", "France"),
+    code = c("USA", "FRA"),
+    extra2 = c("x", "y")
+  )
+
+  # Test placing before a different column
+  result_before_id <- standardize_entity(
+    test_df,
+    name,
+    code,
+    .before = "id"
+  )
+  expected_before_id_order <- c(
+    "entity_id", "entity_name", "entity_type",
+    "id", "extra1", "name", "code", "extra2"
+  )
+  expect_equal(names(result_before_id), expected_before_id_order)
+
+  # Test placing before the last column
+  result_before_extra2 <- standardize_entity(
+    test_df,
+    name,
+    code,
+    .before = "extra2"
+  )
+  expected_before_extra2_order <- c(
+    "id", "extra1", "name", "code",
+    "entity_id", "entity_name", "entity_type",
+    "extra2"
+  )
+  expect_equal(names(result_before_extra2), expected_before_extra2_order)
+
+  # Test placing before a column that doesn't exist
+  expect_error(
+    standardize_entity(
+      test_df,
+      name,
+      code,
+      .before = "not_a_column"
+    ),
+    "Can't select columns that don't exist"
+  )
 })
 
 # TODO: Ambiguity tests

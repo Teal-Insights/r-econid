@@ -35,6 +35,10 @@ valid_cols <- c(
 #' @param overwrite Logical; whether to overwrite existing entity_* columns
 #' @param warn_overwrite Logical; whether to warn when overwriting existing
 #'   entity_* columns. Defaults to TRUE.
+#' @param .before Column name or position to insert the standardized columns
+#'   before. Defaults to the first target column. Can be a character vector
+#'   specifying the column name or a numeric value specifying the column index.
+#'   If the specified column is not found in the data, an error is thrown.
 #'
 #' @return A data frame with standardized entity information merged with the
 #'   input data. The standardized columns are placed directly to the left of the
@@ -76,7 +80,8 @@ standardize_entity <- function(
   default_entity_type = NA_character_,
   warn_ambiguous = TRUE,
   overwrite = TRUE,
-  warn_overwrite = TRUE
+  warn_overwrite = TRUE,
+  .before = NULL
 ) {
   # Gather the columns from ...
   target_cols_syms <- rlang::ensyms(...)
@@ -167,10 +172,18 @@ standardize_entity <- function(
   }
 
   # Reorder columns
-  results <- results |>
-    dplyr::relocate(
-      dplyr::any_of(prefixed_output_cols), .before = target_cols_names[1]
-    )
+  if (!rlang::quo_is_null(rlang::enquo(.before))) {
+    print("You are here")
+    results <- results |>
+      dplyr::relocate(
+        dplyr::any_of(prefixed_output_cols), .before = {{ .before }}
+      )
+  } else {
+    results <- results |>
+      dplyr::relocate(
+        dplyr::any_of(prefixed_output_cols), .before = 1
+      )
+  }
 
   results
 }
