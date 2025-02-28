@@ -51,7 +51,12 @@ for the length of the R session.
 }
 \examples{
 \dontrun{
-  add_entity_pattern("EU", "European Union", aliases = c("Europe"))
+  add_entity_pattern(
+    "EU",
+    "European Union",
+    "economy",
+    aliases = c("Europe")
+  )
   patterns <- list_entity_patterns()
 }
 

@@ -173,7 +173,7 @@ standardize_entity <- function(
     for (output_col in names(fill_mapping)) {
       input_col <- fill_mapping[[output_col]]
       prefixed_output <- if (!is.null(prefix)) {
-        paste(prefix, output_col, sep = "_") 
+        paste(prefix, output_col, sep = "_")
       } else {
         output_col
       }

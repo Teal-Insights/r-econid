@@ -4,7 +4,13 @@
 \alias{validate_entity_inputs}
 \title{Validate inputs for entity standardization}
 \usage{
-validate_entity_inputs(data, target_cols_names, output_cols, prefix = NULL)
+validate_entity_inputs(
+  data,
+  target_cols_names,
+  output_cols,
+  prefix,
+  fill_mapping = NULL
+)
 }
 \arguments{
 \item{data}{A data frame or tibble to validate}
@@ -15,9 +21,12 @@ identifiers}
 \item{output_cols}{Character vector of requested output columns}
 
 \item{prefix}{Optional character string to prefix the output column names}
+
+\item{fill_mapping}{Named character vector specifying how to fill missing
+values}
 }
 \value{
-Character vector of validated output columns
+Invisible NULL
 }
 \description{
 Validates the input data frame and column names for entity standardization.

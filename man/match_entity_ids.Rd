@@ -2,14 +2,14 @@
 % Please edit documentation in R/standardize_entity.R
 \name{match_entity_ids}
 \alias{match_entity_ids}
-\title{Match entity Ids}
+\title{Match entity IDs using multiple columns}
 \usage{
-match_entity_ids(names, codes = NULL, warn_ambiguous = TRUE)
+match_entity_ids(data, target_cols, warn_ambiguous = TRUE)
 }
 \arguments{
-\item{names}{Character vector of entity names to standardize}
+\item{data}{A data frame containing the columns to match}
 
-\item{codes}{Optional character vector of entity codes}
+\item{target_cols}{Character vector of column names to match}
 
 \item{warn_ambiguous}{Logical; whether to warn about ambiguous matches}
 }
@@ -17,7 +17,9 @@ match_entity_ids(names, codes = NULL, warn_ambiguous = TRUE)
 A vector of entity ids
 }
 \description{
-Given vectors of names and codes, match them against a list of patterns and
-return a vector of entity ids.
+Given a data frame and a vector of column names, match the values in those
+columns against a list of patterns and return a vector of entity ids. The
+function tries each column in sequence, prioritizing matches from earlier
+columns.
 }
 \keyword{internal}
