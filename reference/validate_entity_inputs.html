@@ -27,7 +27,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Validate inputs for entity standardization</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Teal-Insights/r-econid/blob/main/R/standardize_entities.R" class="external-link"><code>R/standardize_entities.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Teal-Insights/r-econid/blob/main/R/standardize_entity.R" class="external-link"><code>R/standardize_entity.R</code></a></small>
       <div class="d-none name"><code>validate_entity_inputs.Rd</code></div>
     </div>
 
@@ -37,7 +37,13 @@
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">validate_entity_inputs</span><span class="op">(</span><span class="va">data</span>, <span class="va">name_col_name</span>, <span class="va">code_col_name</span>, <span class="va">output_cols</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">validate_entity_inputs</span><span class="op">(</span></span>
+<span>  <span class="va">data</span>,</span>
+<span>  <span class="va">target_cols_names</span>,</span>
+<span>  <span class="va">output_cols</span>,</span>
+<span>  <span class="va">prefix</span>,</span>
+<span>  fill_mapping <span class="op">=</span> <span class="cn">NULL</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -48,21 +54,27 @@
 <dd><p>A data frame or tibble to validate</p></dd>
 
 
-<dt id="arg-name-col-name">name_col_name<a class="anchor" aria-label="anchor" href="#arg-name-col-name"></a></dt>
-<dd><p>Name of the column containing entity names</p></dd>
-
-
-<dt id="arg-code-col-name">code_col_name<a class="anchor" aria-label="anchor" href="#arg-code-col-name"></a></dt>
-<dd><p>Optional name of the column containing entity codes</p></dd>
+<dt id="arg-target-cols-names">target_cols_names<a class="anchor" aria-label="anchor" href="#arg-target-cols-names"></a></dt>
+<dd><p>Character vector of column names containing entity
+identifiers</p></dd>
 
 
 <dt id="arg-output-cols">output_cols<a class="anchor" aria-label="anchor" href="#arg-output-cols"></a></dt>
 <dd><p>Character vector of requested output columns</p></dd>
 
+
+<dt id="arg-prefix">prefix<a class="anchor" aria-label="anchor" href="#arg-prefix"></a></dt>
+<dd><p>Optional character string to prefix the output column names</p></dd>
+
+
+<dt id="arg-fill-mapping">fill_mapping<a class="anchor" aria-label="anchor" href="#arg-fill-mapping"></a></dt>
+<dd><p>Named character vector specifying how to fill missing
+values</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>List containing validated output_cols and final_cols</p>
+    <p>Invisible NULL</p>
     </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
