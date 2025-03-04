@@ -30,5 +30,16 @@ result <- bench::mark(
 # Print the result
 print(result)
 
-# Save the result
-saveRDS(result, "bench/benchmark_standardize_economy.rds")
+# Load previous results if they exist
+if (file.exists("bench/benchmark_standardize_economy.rds")) {
+  previous_results <- readRDS("bench/benchmark_standardize_economy.rds")
+  # Add metadata to current result
+  attr(result, "run_date") <- Sys.time()
+  # Combine with previous results
+  all_results <- list(previous_results, result)
+  saveRDS(all_results, "bench/benchmark_standardize_economy.rds")
+} else {
+  # First run, just save current result
+  attr(result, "run_date") <- Sys.time()
+  saveRDS(result, "bench/benchmark_standardize_economy.rds")
+}

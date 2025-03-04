@@ -217,34 +217,6 @@ standardize_entity <- function(
       )
   }
 
-  # Check for ambiguous matches (multiple matches for the same entity_id) and
-  # warn that we will keep only the first match
-  if (warn_ambiguous) {
-    # Get groups of target values with multiple entity ID matches
-    ambiguous_targets <- results |>
-      dplyr::group_by(!!rlang::sym(target_cols_names[1])) |>
-      dplyr::summarize(
-        entity_ids = list(unique(!!rlang::sym(names(entity_patterns)[1]))),
-        count = dplyr::n()
-      ) |>
-      dplyr::filter(count > 1) # nolint
-
-    # Warn for each ambiguous match
-    if (nrow(ambiguous_targets) > 0) {
-      for (i in seq_len(nrow(ambiguous_targets))) {
-        cli::cli_warn(c(
-          "!" = paste(
-            "Ambiguous match for",
-            ambiguous_targets[[target_cols_names[1]]][i],
-            "Matches multiple entity IDs:",
-            paste(ambiguous_targets$entity_ids[[i]], collapse = ", "),
-            "\nThe output will contain duplicate rows."
-          )
-        ))
-      }
-    }
-  }
-
   results
 }
 
@@ -381,7 +353,9 @@ match_entities_with_patterns <- function(
   # entity_patterns columns
   col_names <- c(names(patterns), target_cols)
   matched_entities <- tibble::tibble(
-    !!!setNames(purrr::map(col_names, ~ c()), col_names), .row_id = integer()
+    !!!stats::setNames(
+      purrr::map(col_names, ~ c()), col_names
+    ), .row_id = integer()
   )
 
   # Perform multiple passes of fuzzy matching, one for each target column
@@ -395,7 +369,7 @@ match_entities_with_patterns <- function(
     matched_pass <- fuzzyjoin::regex_inner_join(
       unmatched_entities,
       patterns,
-      by = setNames(entity_regex_col, col),
+      by = stats::setNames(entity_regex_col, col),
       ignore_case = TRUE
     )
 
@@ -428,7 +402,7 @@ match_entities_with_patterns <- function(
   missing_cols <- setdiff(names(patterns), names(result))
   if (length(missing_cols) > 0) {
     na_patterns <- tibble::tibble(
-      !!!setNames(
+      !!!stats::setNames(
         purrr::map(missing_cols, ~ rep(NA, nrow(result))),
         missing_cols
       )

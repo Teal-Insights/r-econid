@@ -7,7 +7,6 @@
 match_entities_with_patterns(
   data,
   target_cols,
-  output_cols = c("entity_id", "entity_name", "entity_type"),
   patterns,
   warn_ambiguous = TRUE
 )
@@ -17,9 +16,6 @@ match_entities_with_patterns(
 
 \item{target_cols}{Character vector of column names to match}
 
-\item{output_cols}{Character vector of entity pattern output columns to
-return}
-
 \item{patterns}{Data frame containing entity patterns; if NULL, uses
 list_entity_patterns()}
 
@@ -27,14 +23,12 @@ list_entity_patterns()}
 }
 \value{
 A data frame with the unique combinations of the target columns
-mapped to the selected output columns of the entity patterns
+mapped to the entity patterns
 }
 \description{
-Given a data frame and a vector of column names, group by the unique
-combinations of the target columns and assign a match_id. Then, perform
-regex matching on the target columns until all entities are matched or we
-run out of columns to match. Warn about ambiguous matches (duplicate match_id
-values). Return a data frame mapping the target columns to the output columns
-of the entity patterns.
+Given a data frame and a vector of target columns, perform regex matching
+on the target columns until all entities are matched or we run out of
+columns to match. Warn about ambiguous matches (duplicate entity_id values).
+Return a data frame mapping the target columns to the entity patterns.
 }
 \keyword{internal}
