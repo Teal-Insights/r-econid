@@ -437,18 +437,19 @@ match_entities_with_patterns <- function(
       dplyr::filter(!is.na(!!rlang::sym(entity_id_col))) |>
       dplyr::summarize(
         entity_ids = list(unique(!!rlang::sym(entity_id_col))),
-        count = length(unique(!!rlang::sym(entity_id_col))),
-        .groups = "drop"
+        count = dplyr::n()
       ) |>
-      dplyr::filter(count > 1)
+      dplyr::filter(count > 1) # nolint
 
     # Warn for each ambiguous match
     if (nrow(ambiguous_targets) > 0) {
       for (i in seq_len(nrow(ambiguous_targets))) {
         original_value <- ambiguous_targets[[target_cols[1]]][i]
-        matching_ids <- paste(ambiguous_targets$entity_ids[[i]], collapse = ", ")
+        matching_ids <- paste(
+          ambiguous_targets$entity_ids[[i]], collapse = ", "
+        )
         cli::cli_warn(c(
-          "!" = "Ambiguous match for {.val {original_value}}",
+          "!" = paste("Ambiguous match for", original_value),
           "*" = paste(
             "Matches multiple entity IDs:", matching_ids,
             "\nThe output will contain duplicate rows."
