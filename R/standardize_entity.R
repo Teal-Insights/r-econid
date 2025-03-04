@@ -145,29 +145,32 @@ standardize_entity <- function(
     names(entity_patterns) <- paste(prefix, names(entity_patterns), sep = "_")
   }
 
-  # Use regex match to add a column of entity_ids to the data
-  prefixed_entity_id_col <- names(entity_patterns)[1]
-  data[prefixed_entity_id_col] <- match_entity_ids(
+  # Use regex match to map entities to patterns
+  entity_mapping <- match_entities_with_patterns(
     data = data,
     target_cols = target_cols_names,
+    patterns = entity_patterns,
     warn_ambiguous = warn_ambiguous
   )
 
-  # Join entity_patterns to the input data
+  # Select only the prefixed output columns and original data columns
+  entity_mapping <- entity_mapping |>
+    dplyr::select(
+      dplyr::all_of(prefixed_output_cols),
+      dplyr::all_of(names(data))
+    )
+
+  # Join entity_mapping to the input data
   results <- dplyr::left_join(
     data,
-    entity_patterns,
-    by = c(prefixed_entity_id_col)
+    entity_mapping,
+    by = target_cols_names
   )
-
-  # Drop any entity_patterns cols not in the prefixed_output_cols
-  difference <- setdiff(names(entity_patterns), prefixed_output_cols)
-  results <- results[, !(names(results) %in% difference)]
 
   # Apply fill_mapping for rows with no matches
   if (!is.null(fill_mapping)) {
     # Get rows with no matches
-    no_match_mask <- is.na(results[[prefixed_entity_id_col]])
+    no_match_mask <- is.na(results[[prefixed_output_cols[1]]])
 
     # Apply each mapping
     for (output_col in names(fill_mapping)) {
@@ -302,95 +305,123 @@ validate_entity_inputs <- function(
   invisible(NULL)
 }
 
-#' Try Regex Pattern Match
+#' Match entities with patterns using fuzzyjoin
 #'
 #' @description
-#' Attempts to match a string and return matching entity_id(s) using regex
-#' patterns from entity_patterns.
-#'
-#' @param name Character string of entity name or code
-#'
-#' @return Character vector of entity_ids
-#'
-#' @keywords internal
-try_regex_match <- function(name) {
-  patterns <- list_entity_patterns()
-
-  grepl_mask <- function(pattern, x) {
-    grepl(pattern, x, ignore.case = TRUE, perl = TRUE)
-  }
-
-  # Get a boolean vector of which regex patterns match the name
-  matches_case_insensitive <- vapply(
-    patterns$entity_regex,
-    grepl_mask,
-    x = name,
-    FUN.VALUE = logical(1)
-  )
-
-  # Return the entity_ids of the patterns that match the name
-  patterns$entity_id[
-    matches_case_insensitive
-  ]
-}
-
-#' Match entity IDs using multiple columns
-#'
-#' @description
-#' Given a data frame and a vector of column names, match the values in those
-#' columns against a list of patterns and return a vector of entity ids. The
-#' function tries each column in sequence, prioritizing matches from earlier
-#' columns.
+#' Given a data frame and a vector of target columns, perform regex matching
+#' on the target columns until all entities are matched or we run out of
+#' columns to match. Warn about ambiguous matches (duplicate entity_id values).
+#' Return a data frame mapping the target columns to the entity patterns.
 #'
 #' @param data A data frame containing the columns to match
 #' @param target_cols Character vector of column names to match
+#' @param patterns Data frame containing entity patterns; if NULL, uses
+#'   list_entity_patterns()
 #' @param warn_ambiguous Logical; whether to warn about ambiguous matches
 #'
-#' @return A vector of entity ids
+#' @return A data frame with the unique combinations of the target columns
+#'   mapped to the entity patterns
 #'
 #' @keywords internal
-match_entity_ids <- function(
+match_entities_with_patterns <- function(
   data,
   target_cols,
+  patterns,
   warn_ambiguous = TRUE
 ) {
-  # Initialize results vector with NAs
-  n_rows <- nrow(data)
-  results <- rep(NA_character_, n_rows)
+  # Get the column names for entity_regex and entity_id in the patterns data
+  # frame
+  entity_regex_col <- names(patterns)[6]
+  entity_id_col <- names(patterns)[1]
 
-  # Process each row
-  for (i in seq_len(n_rows)) {
-    # Try each target column in sequence
-    for (col in target_cols) {
-      current_value <- data[[col]][i]
+  # If data frame is empty, return empty result with correct structure
+  if (nrow(data) == 0) {
+    return(
+      patterns |>
+        dplyr::slice(0) |>
+        dplyr::bind_cols(data)
+    )
+  }
 
-      # Skip NA or empty values
-      if (is.na(current_value) || current_value == "") {
-        next
-      }
+  # Initialize a tibble to hold unmatched unique combinations of target columns
+  unmatched_entities <- data |>
+    dplyr::distinct(dplyr::across(dplyr::all_of(target_cols))) |>
+    dplyr::select(dplyr::all_of(target_cols)) |>
+    dplyr::mutate(row_id = seq_len(dplyr::n()))
 
-      # Try to match the current value
-      match_results <- try_regex_match(current_value)
+  # Initialize a tibble to hold the matched entities with corresponding
+  # entity_patterns columns
+  col_names <- c(names(patterns), target_cols, "row_id")
+  matched_entities <- tibble::tibble(
+    !!!setNames(purrr::map(col_names, ~ c()), col_names)
+  )
 
-      # If we found matches
-      if (length(match_results) > 0) {
-        # Warn if there are multiple matches
-        if (warn_ambiguous && length(match_results) > 1) {
-          cli::cli_warn(c(
-            "!" = "Ambiguous match for {.val {current_value}}",
-            "*" = paste(
-              "Matches multiple patterns:",
-              paste(match_results, collapse = ", ")
-            )
-          ))
-        }
+  # Perform multiple passes of fuzzy matching, one for each target column
+  for (col in target_cols) {
+    # Skip if the column has all NA values
+    if (all(is.na(unmatched_entities[[col]]))) {
+      next
+    }
 
-        # Store the first match and break out of the column loop
-        results[i] <- match_results[1]
-        break
-      }
+    # Perform regex join on the current column for unmatched rows
+    matched_pass <- fuzzyjoin::regex_right_join(
+      patterns,
+      unmatched_entities,
+      by = setNames(col, entity_regex_col),
+      ignore_case = TRUE
+    )
+
+    # Find which row IDs were successfully matched
+    matched_ids <- matched_pass |>
+      dplyr::filter(!is.na(!!rlang::sym(entity_id_col))) |>
+      dplyr::pull(row_id) |>
+      unique()
+
+    # Update unmatched_entities by removing matched rows
+    unmatched_entities <- unmatched_entities |>
+      dplyr::filter(!row_id %in% matched_ids)
+
+    # Combine non-NA matched_pass rows with previous matches
+    matched_entities <- dplyr::bind_rows(
+      matched_entities,
+      matched_pass |>
+        dplyr::filter(!is.na(!!rlang::sym(entity_id_col)))
+    )
+
+    # Break if all unmatched entities are matched
+    if (nrow(unmatched_entities) == 0) {
+      break
     }
   }
 
-  results
+  # Bind any remaining unmatched entities to the matched entities
+  result <- dplyr::bind_rows(
+    matched_entities,
+    unmatched_entities
+  ) |>
+    dplyr::select(-row_id)
+
+  # Check for ambiguous matches (multiple matches for the same entity_id) and
+  # warn that we will keep only the first match
+  if (warn_ambiguous) {
+    ambiguous_matches <- result |>
+      dplyr::group_by(!!rlang::sym(entity_id_col)) |>
+      dplyr::filter(dplyr::n() > 1)
+
+    # Warn for each ambiguous match
+    for (i in seq_len(nrow(ambiguous_matches))) {
+      cli::cli_warn(c(
+        "!" = (
+          "Ambiguous match for {.val {ambiguous_matches$original_value[i]}}"
+        ),
+        "*" = paste(
+          "Matches multiple patterns:",
+          ambiguous_matches$matches[i],
+          "\nThe output will contain duplicate rows."
+        )
+      ))
+    }
+  }
+
+  result
 }

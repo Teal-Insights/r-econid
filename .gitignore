@@ -4,3 +4,4 @@ docs
 .env
 data-raw/.csv
 /.quarto/
+.cursorrules
