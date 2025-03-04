@@ -157,7 +157,7 @@ standardize_entity <- function(
   entity_mapping <- entity_mapping |>
     dplyr::select(
       dplyr::all_of(prefixed_output_cols),
-      dplyr::all_of(names(data))
+      dplyr::all_of(target_cols_names)
     )
 
   # Join entity_mapping to the input data
@@ -375,13 +375,13 @@ match_entities_with_patterns <- function(
   unmatched_entities <- data |>
     dplyr::distinct(dplyr::across(dplyr::all_of(target_cols))) |>
     dplyr::select(dplyr::all_of(target_cols)) |>
-    dplyr::mutate(row_id = seq_len(dplyr::n()))
+    dplyr::mutate(.row_id = seq_len(dplyr::n()))
 
   # Initialize a tibble to hold the matched entities with corresponding
   # entity_patterns columns
   col_names <- c(names(patterns), target_cols)
   matched_entities <- tibble::tibble(
-    !!!setNames(purrr::map(col_names, ~ c()), col_names), row_id = integer()
+    !!!setNames(purrr::map(col_names, ~ c()), col_names), .row_id = integer()
   )
 
   # Perform multiple passes of fuzzy matching, one for each target column
@@ -399,14 +399,9 @@ match_entities_with_patterns <- function(
       ignore_case = TRUE
     )
 
-    # Find which row IDs were successfully matched
-    matched_ids <- matched_pass |>
-      dplyr::pull(row_id) |> # nolint
-      unique()
-
     # Update unmatched_entities by removing matched rows
     unmatched_entities <- unmatched_entities |>
-      dplyr::anti_join(dplyr::tibble(row_id = matched_ids), by = "row_id")
+      dplyr::anti_join(matched_pass, by = ".row_id")
 
     # Combine non-NA matched_pass rows with previous matches
     matched_entities <- dplyr::bind_rows(
@@ -426,7 +421,20 @@ match_entities_with_patterns <- function(
     matched_entities,
     unmatched_entities
   ) |>
-    dplyr::select(-row_id) # nolint
+    dplyr::select(-.row_id) # nolint
+
+  # If no patterns columns exist in the result (which happens when all values
+  # in data are NA or no matches are found), add these columns with NA values
+  missing_cols <- setdiff(names(patterns), names(result))
+  if (length(missing_cols) > 0) {
+    na_patterns <- tibble::tibble(
+      !!!setNames(
+        purrr::map(missing_cols, ~ rep(NA, nrow(result))),
+        missing_cols
+      )
+    )
+    result <- dplyr::bind_cols(result, na_patterns)
+  }
 
   # Check for ambiguous matches (multiple matches for the same entity_id) and
   # warn that we will keep only the first match

@@ -218,12 +218,6 @@ test_that("match_entities_with_patterns handles output_cols parameter", {
 })
 
 test_that("match_entities_with_patterns handles ambiguous matches", {
-  # Create a test dataframe with a value that matches multiple patterns
-  # For this test, we'll need to mock the entity_patterns to ensure ambiguity
-
-  # Setup a temporary environment for testing
-  test_env <- new.env()
-
   # Create a mock entity_patterns with ambiguous patterns
   # Make sure it has the same structure as the real patterns dataframe
   mock_patterns <- tibble::tibble(
@@ -235,49 +229,46 @@ test_that("match_entities_with_patterns handles ambiguous matches", {
     entity_regex = c("^us$", "^us$")
   )
 
-  # Use withr to temporarily mock the list_entity_patterns function
-  withr::with_environment(
-    test_env,
-    {
-      # Mock the list_entity_patterns function
-      list_entity_patterns <- function() {
-        mock_patterns
-      }
-
-      # Create a test dataframe
-      test_df <- tibble::tibble(
-        country = "us"
-      )
-
-      # Test with warn_ambiguous = TRUE
-      # This should warn about ambiguous matches and return a data frame with
-      # both matches (duplicates)
-      expect_warning(
-        {
-          result <- match_entities_with_patterns(
-            test_df,
-            target_cols = "country",
-            patterns = mock_patterns,
-            warn_ambiguous = TRUE
-          )
-        },
-        "Ambiguous match"
-      )
-
-      # Should return a data frame with both matches for ambiguous entries
-      expect_s3_class(result, "data.frame")
-      expect_equal(nrow(result), 2)  # Now expect 2 rows instead of 1
-
-      # Check that both matches are present
-      expect_true(all(c("USA", "USB") %in% result$entity_id))
-      expect_true(
-        all(c("United States A", "United States B") %in% result$entity_name)
-      )
-
-      # All rows should have the same country value
-      expect_equal(result$country, c("us", "us"))
+  # Use local_mocked_bindings to temporarily mock the list_entity_patterns
+  # function
+  local_mocked_bindings(
+    list_entity_patterns = function() {
+      mock_patterns
     }
   )
+
+  # Create a test dataframe
+  test_df <- tibble::tibble(
+    country = "us"
+  )
+
+  # Test with warn_ambiguous = TRUE
+  # This should warn about ambiguous matches and return a data frame with
+  # both matches (duplicates)
+  expect_warning(
+    {
+      result <- match_entities_with_patterns(
+        test_df,
+        target_cols = "country",
+        patterns = mock_patterns,
+        warn_ambiguous = TRUE
+      )
+    },
+    "Ambiguous match"
+  )
+
+  # Should return a data frame with both matches for ambiguous entries
+  expect_s3_class(result, "data.frame")
+  expect_equal(nrow(result), 2)  # Now expect 2 rows instead of 1
+
+  # Check that both matches are present
+  expect_true(all(c("USA", "USB") %in% result$entity_id))
+  expect_true(
+    all(c("United States A", "United States B") %in% result$entity_name)
+  )
+
+  # All rows should have the same country value
+  expect_equal(result$country, c("us", "us"))
 })
 
 test_that("output_cols argument correctly filters columns", {
@@ -772,9 +763,6 @@ test_that("match_entities_with_patterns fails gracefully with invalid input", {
 })
 
 test_that("match_entities_with_patterns handles multiple ambiguous matches", {
-  # Create a test environment
-  test_env <- new.env()
-
   # Create mock patterns with multiple ambiguous matches
   mock_patterns <- tibble::tibble(
     entity_id = c("USA", "USB", "FRA", "FRB"),
@@ -787,63 +775,60 @@ test_that("match_entities_with_patterns handles multiple ambiguous matches", {
     entity_regex = c("^us$", "^us$", "^fr$", "^fr$")  # Ambiguous patterns
   )
 
-  # Use withr to temporarily mock the list_entity_patterns function
-  withr::with_environment(
-    test_env,
-    {
-      # Mock the list_entity_patterns function
-      list_entity_patterns <- function() {
-        mock_patterns
-      }
-
-      # Create a test dataframe with multiple entities that have ambiguous
-      # matches
-      test_df <- tibble::tibble(
-        country = c("us", "fr", "de")  # "us" and "fr" are ambiguous, "de" not
-      )
-
-      # Test with warn_ambiguous = TRUE
-      # Should warn about ambiguous matches and return duplicates for each
-      # ambiguous entity
-      expect_warning(
-        {
-          result <- match_entities_with_patterns(
-            test_df,
-            target_cols = "country",
-            patterns = mock_patterns,
-            warn_ambiguous = TRUE
-          )
-        },
-        "Ambiguous match"
-      )
-
-      # Should return a data frame with duplicates for ambiguous entries
-      expect_s3_class(result, "data.frame")
-      # 2 rows for "us", 2 rows for "fr", 1 row for "de"
-      expect_equal(nrow(result), 5)
-
-      # Check US matches
-      us_matches <- result[result$country == "us", ]
-      expect_equal(nrow(us_matches), 2)
-      expect_true(all(c("USA", "USB") %in% us_matches$entity_id))
-
-      # Check FR matches
-      fr_matches <- result[result$country == "fr", ]
-      expect_equal(nrow(fr_matches), 2)
-      expect_true(all(c("FRA", "FRB") %in% fr_matches$entity_id))
-
-      # Check DE (no match)
-      de_match <- result[result$country == "de", ]
-      expect_equal(nrow(de_match), 1)
-      expect_true(is.na(de_match$entity_id))
+  # Use local_mocked_bindings to temporarily mock the list_entity_patterns
+  # function
+  local_mocked_bindings(
+    list_entity_patterns = function() {
+      mock_patterns
     }
   )
+
+  # Create a test dataframe with multiple entities that have ambiguous
+  # matches
+  test_df <- tibble::tibble(
+    country = c("us", "fr", "de")  # "us" and "fr" are ambiguous, "de" not
+  )
+
+  # Test with warn_ambiguous = TRUE
+  # Should warn about ambiguous matches and return duplicates for each
+  # ambiguous entity
+  expect_warning(
+    expect_warning(
+      {
+        result <- match_entities_with_patterns(
+          test_df,
+          target_cols = "country",
+          patterns = mock_patterns,
+          warn_ambiguous = TRUE
+        )
+      },
+      "Ambiguous match for fr"
+    ),
+    "Ambiguous match for us"
+  )
+
+  # Should return a data frame with duplicates for ambiguous entries
+  expect_s3_class(result, "data.frame")
+  # 2 rows for "us", 2 rows for "fr", 1 row for "de"
+  expect_equal(nrow(result), 5)
+
+  # Check US matches
+  us_matches <- result[result$country == "us", ]
+  expect_equal(nrow(us_matches), 2)
+  expect_true(all(c("USA", "USB") %in% us_matches$entity_id))
+
+  # Check FR matches
+  fr_matches <- result[result$country == "fr", ]
+  expect_equal(nrow(fr_matches), 2)
+  expect_true(all(c("FRA", "FRB") %in% fr_matches$entity_id))
+
+  # Check DE (no match)
+  de_match <- result[result$country == "de", ]
+  expect_equal(nrow(de_match), 1)
+  expect_true(is.na(de_match$entity_id))
 })
 
 test_that("match_entities_with_patterns suppresses warnings per option", {
-  # Create a test environment
-  test_env <- new.env()
-
   # Create mock patterns with ambiguous matches
   mock_patterns <- tibble::tibble(
     entity_id = c("USA", "USB"),
@@ -854,49 +839,42 @@ test_that("match_entities_with_patterns suppresses warnings per option", {
     entity_regex = c("^us$", "^us$")  # Both patterns match "us"
   )
 
-  # Use withr to temporarily mock the list_entity_patterns function
-  withr::with_environment(
-    test_env,
+  # Use local_mocked_bindings to temporarily mock the list_entity_patterns
+  # function
+  local_mocked_bindings(
+    list_entity_patterns = function() {
+      mock_patterns
+    }
+  )
+
+  # Create a test dataframe
+  test_df <- tibble::tibble(
+    country = "us"
+  )
+
+  # Test with warn_ambiguous = FALSE
+  # This should NOT warn about ambiguous matches but still return all matches
+  expect_no_warning(
     {
-      # Mock the list_entity_patterns function
-      list_entity_patterns <- function() {
-        mock_patterns
-      }
-
-      # Create a test dataframe
-      test_df <- tibble::tibble(
-        country = "us"
-      )
-
-      # Test with warn_ambiguous = FALSE
-      # This should NOT warn about ambiguous matches but still return all
-      # matches
-      expect_no_warning(
-        {
-          result <- match_entities_with_patterns(
-            test_df,
-            target_cols = "country",
-            patterns = mock_patterns,
-            warn_ambiguous = FALSE
-          )
-        }
-      )
-
-      # Should still return a data frame with both matches despite no warning
-      expect_s3_class(result, "data.frame")
-      expect_equal(nrow(result), 2)
-      expect_true(all(c("USA", "USB") %in% result$entity_id))
-      expect_true(
-        all(c("United States A", "United States B") %in% result$entity_name)
+      result <- match_entities_with_patterns(
+        test_df,
+        target_cols = "country",
+        patterns = mock_patterns,
+        warn_ambiguous = FALSE
       )
     }
+  )
+
+  # Should still return a data frame with both matches despite no warning
+  expect_s3_class(result, "data.frame")
+  expect_equal(nrow(result), 2)
+  expect_true(all(c("USA", "USB") %in% result$entity_id))
+  expect_true(
+    all(c("United States A", "United States B") %in% result$entity_name)
   )
 })
 
 test_that("match_entities_with_patterns handles case insensitive matches", {
-  # Create a test environment
-  test_env <- new.env()
-
   # Create mock patterns
   mock_patterns <- tibble::tibble(
     entity_id = c("USA"),
@@ -907,45 +885,42 @@ test_that("match_entities_with_patterns handles case insensitive matches", {
     entity_regex = c("^united states|usa|us$")
   )
 
-  # Use withr to temporarily mock the list_entity_patterns function
-  withr::with_environment(
-    test_env,
-    {
-      # Mock the list_entity_patterns function
-      list_entity_patterns <- function() {
-        mock_patterns
-      }
-
-      # Create a test dataframe with different case variations
-      test_df <- tibble::tibble(
-        country = c("us", "US", "Us", "uS")
-      )
-
-      # This should not warn about ambiguous matches as these are the same
-      # pattern just with different cases
-      expect_no_warning(
-        {
-          result <- match_entities_with_patterns(
-            test_df,
-            target_cols = "country",
-            patterns = mock_patterns,
-            warn_ambiguous = TRUE  # Even with warnings enabled
-          )
-        }
-      )
-
-      # Should return a data frame with one row for each unique input
-      expect_s3_class(result, "data.frame")
-      expect_equal(nrow(result), 4)  # One per case variation
-
-      # All should be matched to USA
-      expect_equal(unique(result$entity_id), "USA")
-      expect_equal(unique(result$entity_name), "United States")
-
-      # Each row should preserve its original case
-      expect_equal(result$country, c("us", "US", "Us", "uS"))
+  # Use local_mocked_bindings to temporarily mock the list_entity_patterns
+  # function
+  local_mocked_bindings(
+    list_entity_patterns = function() {
+      mock_patterns
     }
   )
+
+  # Create a test dataframe with different case variations
+  test_df <- tibble::tibble(
+    country = c("us", "US", "Us", "uS")
+  )
+
+  # This should not warn about ambiguous matches as these are the same pattern
+  # just with different cases
+  expect_no_warning(
+    {
+      result <- match_entities_with_patterns(
+        test_df,
+        target_cols = "country",
+        patterns = mock_patterns,
+        warn_ambiguous = TRUE  # Even with warnings enabled
+      )
+    }
+  )
+
+  # Should return a data frame with one row for each unique input
+  expect_s3_class(result, "data.frame")
+  expect_equal(nrow(result), 4)  # One per case variation
+
+  # All should be matched to USA
+  expect_equal(unique(result$entity_id), "USA")
+  expect_equal(unique(result$entity_name), "United States")
+
+  # Each row should preserve its original case
+  expect_equal(result$country, c("us", "US", "Us", "uS"))
 })
 
 test_that("match_entities_with_patterns performs multiple passes correctly", {
@@ -969,63 +944,71 @@ test_that("match_entities_with_patterns performs multiple passes correctly", {
     entity_regex = c("^(united states|usa|us)$", "^(france|fra|fr)$")
   )
 
-  # Use withr to temporarily mock the list_entity_patterns function
-  withr::with_environment(
-    new.env(),
-    {
-      # Mock the list_entity_patterns function
-      list_entity_patterns <- function() {
-        mock_patterns
-      }
-
-      # Test the function
-      result <- match_entities_with_patterns(
-        test_df,
-        target_cols = c("name", "code", "description"),
-        patterns = mock_patterns,
-        warn_ambiguous = FALSE
-      )
-
-      # Should be a data frame with all target columns and requested output
-      # columns
-      expect_s3_class(result, "data.frame")
-      expect_true(all(c(
-        "name", "code", "description",
-        "entity_id", "entity_name", "iso3c"
-      ) %in% names(result)))
-
-      # Should have 4 rows (one for each unique combination of target columns)
-      expect_equal(nrow(result), 4)
-
-      # First row should match USA from code column
-      expect_equal(result$entity_id[result$id == 1], "USA")
-      expect_equal(result$entity_name[result$id == 1], "United States")
-
-      # Second row should match FRA from name column
-      expect_equal(result$entity_id[result$id == 2], "FRA")
-      expect_equal(result$entity_name[result$id == 2], "France")
-
-      # Third row should match USA from description column
-      expect_equal(result$entity_id[result$id == 3], "USA")
-      expect_equal(result$entity_name[result$id == 3], "United States")
-
-      # Fourth row should have NAs because no match in any column
-      expect_true(is.na(result$entity_id[result$id == 4]))
-      expect_true(is.na(result$entity_name[result$id == 4]))
-
-      # Change column order to verify priority
-      result2 <- match_entities_with_patterns(
-        test_df,
-        target_cols = c("description", "code", "name"),
-        patterns = mock_patterns,
-        warn_ambiguous = FALSE
-      )
-
-      # Third row should still match USA but now from description column first
-      expect_equal(result2$entity_id[result2$id == 3], "USA")
-
-      # First row should still match USA from code column
-      expect_equal(result2$entity_id[result2$id == 1], "USA")
+  # Use local_mocked_bindings to temporarily mock the list_entity_patterns
+  # function
+  local_mocked_bindings(
+    list_entity_patterns = function() {
+      mock_patterns
     }
   )
+
+  # Test the function
+  result <- match_entities_with_patterns(
+    test_df,
+    target_cols = c("name", "code", "description"),
+    patterns = mock_patterns,
+    warn_ambiguous = FALSE
+  )
+
+  # Should be a data frame with all target columns and requested output columns
+  expect_s3_class(result, "data.frame")
+  expect_true(all(c(
+    "name", "code", "description",
+    "entity_id", "entity_name", "iso3c"
+  ) %in% names(result)))
+
+  # Should have 4 rows (one for each unique combination of target columns)
+  expect_equal(nrow(result), 4)
+
+  # Row with code="USA" should match USA
+  matched_usa_by_code <- result |>
+    dplyr::filter(code == "USA")
+  expect_equal(matched_usa_by_code$entity_id, "USA")
+  expect_equal(matched_usa_by_code$entity_name, "United States")
+
+  # Row with name="France" should match FRA
+  matched_france_by_name <- result |>
+    dplyr::filter(name == "France")
+  expect_equal(matched_france_by_name$entity_id, "FRA")
+  expect_equal(matched_france_by_name$entity_name, "France")
+
+  # Row with description="United States" should match USA
+  matched_usa_by_desc <- result |>
+    dplyr::filter(description == "United States")
+  expect_equal(matched_usa_by_desc$entity_id, "USA")
+  expect_equal(matched_usa_by_desc$entity_name, "United States")
+
+  # Row with no matches should have NAs
+  no_match_row <- result |>
+    dplyr::filter(name == "not a match")
+  expect_true(is.na(no_match_row$entity_id))
+  expect_true(is.na(no_match_row$entity_name))
+
+  # Change column order to verify priority
+  result2 <- match_entities_with_patterns(
+    test_df,
+    target_cols = c("description", "code", "name"),
+    patterns = mock_patterns,
+    warn_ambiguous = FALSE
+  )
+
+  # Row with description="United States" should match USA
+  matched_usa_by_desc2 <- result2 |>
+    dplyr::filter(description == "United States")
+  expect_equal(matched_usa_by_desc2$entity_id, "USA")
+
+  # Row with code="USA" should still match USA
+  matched_usa_by_code2 <- result2 |>
+    dplyr::filter(code == "USA")
+  expect_equal(matched_usa_by_code2$entity_id, "USA")
 })
