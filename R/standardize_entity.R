@@ -217,6 +217,34 @@ standardize_entity <- function(
       )
   }
 
+  # Check for ambiguous matches (multiple matches for the same entity_id) and
+  # warn that we will keep only the first match
+  if (warn_ambiguous) {
+    # Get groups of target values with multiple entity ID matches
+    ambiguous_targets <- results |>
+      dplyr::group_by(!!rlang::sym(target_cols_names[1])) |>
+      dplyr::summarize(
+        entity_ids = list(unique(!!rlang::sym(names(entity_patterns)[1]))),
+        count = dplyr::n()
+      ) |>
+      dplyr::filter(count > 1) # nolint
+
+    # Warn for each ambiguous match
+    if (nrow(ambiguous_targets) > 0) {
+      for (i in seq_len(nrow(ambiguous_targets))) {
+        cli::cli_warn(c(
+          "!" = paste(
+            "Ambiguous match for",
+            ambiguous_targets[[target_cols_names[1]]][i],
+            "Matches multiple entity IDs:",
+            paste(ambiguous_targets$entity_ids[[i]], collapse = ", "),
+            "\nThe output will contain duplicate rows."
+          )
+        ))
+      }
+    }
+  }
+
   results
 }
 
@@ -351,9 +379,9 @@ match_entities_with_patterns <- function(
 
   # Initialize a tibble to hold the matched entities with corresponding
   # entity_patterns columns
-  col_names <- c(names(patterns), target_cols, "row_id")
+  col_names <- c(names(patterns), target_cols)
   matched_entities <- tibble::tibble(
-    !!!setNames(purrr::map(col_names, ~ c()), col_names)
+    !!!setNames(purrr::map(col_names, ~ c()), col_names), row_id = integer()
   )
 
   # Perform multiple passes of fuzzy matching, one for each target column
@@ -364,22 +392,21 @@ match_entities_with_patterns <- function(
     }
 
     # Perform regex join on the current column for unmatched rows
-    matched_pass <- fuzzyjoin::regex_right_join(
-      patterns,
+    matched_pass <- fuzzyjoin::regex_inner_join(
       unmatched_entities,
-      by = setNames(col, entity_regex_col),
+      patterns,
+      by = setNames(entity_regex_col, col),
       ignore_case = TRUE
     )
 
     # Find which row IDs were successfully matched
     matched_ids <- matched_pass |>
-      dplyr::filter(!is.na(!!rlang::sym(entity_id_col))) |>
-      dplyr::pull(row_id) |>
+      dplyr::pull(row_id) |> # nolint
       unique()
 
     # Update unmatched_entities by removing matched rows
     unmatched_entities <- unmatched_entities |>
-      dplyr::filter(!row_id %in% matched_ids)
+      dplyr::anti_join(dplyr::tibble(row_id = matched_ids), by = "row_id")
 
     # Combine non-NA matched_pass rows with previous matches
     matched_entities <- dplyr::bind_rows(
@@ -399,27 +426,35 @@ match_entities_with_patterns <- function(
     matched_entities,
     unmatched_entities
   ) |>
-    dplyr::select(-row_id)
+    dplyr::select(-row_id) # nolint
 
   # Check for ambiguous matches (multiple matches for the same entity_id) and
   # warn that we will keep only the first match
   if (warn_ambiguous) {
-    ambiguous_matches <- result |>
-      dplyr::group_by(!!rlang::sym(entity_id_col)) |>
-      dplyr::filter(dplyr::n() > 1)
+    # Get groups of target values with multiple entity ID matches
+    ambiguous_targets <- result |>
+      dplyr::group_by(!!rlang::sym(target_cols[1])) |>
+      dplyr::filter(!is.na(!!rlang::sym(entity_id_col))) |>
+      dplyr::summarize(
+        entity_ids = list(unique(!!rlang::sym(entity_id_col))),
+        count = length(unique(!!rlang::sym(entity_id_col))),
+        .groups = "drop"
+      ) |>
+      dplyr::filter(count > 1)
 
     # Warn for each ambiguous match
-    for (i in seq_len(nrow(ambiguous_matches))) {
-      cli::cli_warn(c(
-        "!" = (
-          "Ambiguous match for {.val {ambiguous_matches$original_value[i]}}"
-        ),
-        "*" = paste(
-          "Matches multiple patterns:",
-          ambiguous_matches$matches[i],
-          "\nThe output will contain duplicate rows."
-        )
-      ))
+    if (nrow(ambiguous_targets) > 0) {
+      for (i in seq_len(nrow(ambiguous_targets))) {
+        original_value <- ambiguous_targets[[target_cols[1]]][i]
+        matching_ids <- paste(ambiguous_targets$entity_ids[[i]], collapse = ", ")
+        cli::cli_warn(c(
+          "!" = "Ambiguous match for {.val {original_value}}",
+          "*" = paste(
+            "Matches multiple entity IDs:", matching_ids,
+            "\nThe output will contain duplicate rows."
+          )
+        ))
+      }
     }
   }
 
