@@ -10,6 +10,8 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
 Imports: 
     cli,
+    dplyr,
+    fuzzyjoin,
     rlang,
     tibble
 Suggests:
@@ -17,7 +19,6 @@ Suggests:
     devtools (>= 2.4.5),
     lintr (>= 3.1.2),
     dotenv,
-    dplyr,
     tidyr,
     ellmer,
     purrr,

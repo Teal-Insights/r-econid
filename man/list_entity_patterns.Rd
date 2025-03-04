@@ -9,10 +9,12 @@ list_entity_patterns()
 \value{
 A data frame with the following columns:
 \describe{
+\item{entity_id}{entity id}
 \item{entity_name}{entity name}
-\item{entity_regex}{Regular expression pattern for matching entity names}
 \item{iso2c}{ISO 3166-1 alpha-2 code}
 \item{iso3c}{ISO 3166-1 alpha-3 code}
+\item{entity_type}{entity type}
+\item{entity_regex}{Regular expression pattern for matching entity names}
 }
 }
 \description{

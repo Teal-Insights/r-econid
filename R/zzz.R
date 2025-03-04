@@ -1,6 +1,6 @@
 # zzz.R
 
-utils::globalVariables(c(".econid_env"))
+utils::globalVariables(c(".econid_env", "entity_patterns"))
 
 # This will be a private environment where you store your session-specific data
 .econid_env <- new.env(parent = emptyenv())
