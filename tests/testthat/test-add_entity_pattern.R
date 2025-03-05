@@ -216,7 +216,7 @@ test_that("error is thrown when duplicating custom pattern entity_id", {
   expect_error(
     add_entity_pattern(
       entity_id = "duplicate_id2",
-      entity_name = "Different Entity", 
+      entity_name = "Different Entity",
       entity_type = "organization"
     ),
     paste0(

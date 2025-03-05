@@ -1012,3 +1012,56 @@ test_that("match_entities_with_patterns performs multiple passes correctly", {
     dplyr::filter(code == "USA")
   expect_equal(matched_usa_by_code2$entity_id, "USA")
 })
+
+test_that("fill_mapping validates uniqueness of entity_id values", {
+  # Create test data with an entity that won't match any pattern
+  test_df <- tibble::tribble(
+    ~entity,      ~code,
+    "NotACountry", "USA"  # Using "USA" which already exists in entity_patterns
+  )
+
+  # Mock the entity_patterns to have a controlled set of IDs
+  mock_patterns <- tibble::tibble(
+    entity_id = c("USA", "FRA", "DEU"),
+    entity_name = c("United States", "France", "Germany"),
+    entity_type = c("economy", "economy", "economy"),
+    iso3c = c("USA", "FRA", "DEU"),
+    iso2c = c("US", "FR", "DE"),
+    entity_regex = c("^united states|us$", "^france|fra$", "^germany|deu$")
+  )
+
+  # Use local_mocked_bindings to mock list_entity_patterns
+  local_mocked_bindings(
+    list_entity_patterns = function() {
+      mock_patterns
+    }
+  )
+
+  # Should throw a warning when trying to fill with an existing entity_id
+  expect_warning(
+    result <- standardize_entity(
+      test_df,
+      entity,
+      fill_mapping = c(entity_id = "code")  # "code" contains "USA"
+    ),
+    "already exists in the entity_patterns"
+  )
+
+  #But should still perform the fill
+  expect_equal(result$entity_id, "USA")
+
+  # But should work when filling with a different, non-conflicting ID
+  test_df2 <- tibble::tribble(
+    ~entity,      ~code,
+    "NotACountry", "XYZ"  # XYZ doesn't exist in entity_patterns
+  )
+
+  # This should work fine
+  result <- standardize_entity(
+    test_df2,
+    entity, code,
+    fill_mapping = c(entity_id = "code")
+  )
+
+  expect_equal(result$entity_id, "XYZ")
+})

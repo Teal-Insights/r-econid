@@ -181,6 +181,28 @@ standardize_entity <- function(
         output_col
       }
 
+      # If it's the entity_id column, we need to validate that the values being
+      # filled (i.e., in masked rows) are not already in entity_patterns
+      if (output_col == "entity_id") {
+        # Get the entity_id values that are already in entity_patterns
+        existing_ids <- entity_patterns[1]
+
+        # Get the entity_id values that are being filled
+        filled_ids <- results[[input_col]][no_match_mask]
+
+        # Check if any of the filled ids are already in existing_ids
+        if (any(filled_ids %in% existing_ids)) {
+          cli::cli_warn(paste(
+            "The entity_id value(s)",
+            filled_ids[which(filled_ids %in% existing_ids)],
+            "being filled over from",
+            input_col,
+            "already exists in the entity_patterns data frame.",
+            "Please use a unique identifier."
+          ))
+        }
+      }
+
       # Only apply mapping if output column exists
       if (prefixed_output %in% names(results)) {
         # Fill NA values in the output column with values from the input column
