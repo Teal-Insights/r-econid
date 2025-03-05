@@ -22,7 +22,7 @@
 #' @keywords internal
 list_entity_patterns <- function() {
   # Get built-in patterns
-  builtin <- econid::entity_patterns
+  builtin <- entity_patterns
 
   # Create the .econid_env if it doesn't exist
   if (!exists(".econid_env", mode = "environment")) {

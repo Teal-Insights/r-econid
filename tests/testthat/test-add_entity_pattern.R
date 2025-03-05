@@ -170,3 +170,63 @@ test_that("returns invisible NULL", {
   expect_null(vis$value)
   expect_false(vis$visible)
 })
+
+test_that("error is thrown when duplicating default pattern entity_id", {
+  local_clean_econid_patterns()
+
+  # Mock the default patterns
+  local_mocked_bindings(
+    list_entity_patterns = function() {
+      tibble::tibble(
+        entity_id = "duplicate_id1",
+        entity_name = "Original Entity",
+        iso3c = "ORI",
+        iso2c = "OR",
+        entity_type = "economy",
+        entity_regex = "original_regex"
+      )
+    }
+  )
+
+  # Try to add a duplicate of the default pattern and expect an error
+  expect_error(
+    add_entity_pattern(
+      entity_id = "duplicate_id1",
+      entity_name = "Original Entity",
+      entity_type = "economy"
+    ),
+    paste0(
+      "The entity_id 'duplicate_id1' already exists in the custom ",
+      "patterns. Please use a unique identifier."
+    )
+  )
+})
+
+test_that("error is thrown when duplicating custom pattern entity_id", {
+  local_clean_econid_patterns()
+
+  # Add a custom pattern
+  add_entity_pattern(
+    entity_id = "duplicate_id2",
+    entity_name = "Original Entity",
+    entity_type = "economy"
+  )
+
+  # Try to add another with the same entity_id
+  expect_error(
+    add_entity_pattern(
+      entity_id = "duplicate_id2",
+      entity_name = "Different Entity",
+      entity_type = "organization"
+    ),
+    paste0(
+      "The entity_id 'duplicate_id2' already exists in the custom ",
+      "patterns. Please use a unique identifier."
+    )
+  )
+
+  # Verify only one pattern was added
+  cp <- get("custom_entity_patterns", envir = .econid_env)
+  expect_equal(nrow(cp), 1)
+  expect_equal(cp$entity_name[1], "Original Entity")
+})
