@@ -48,22 +48,37 @@ add_entity_pattern <- function(
   aliases = NULL,
   entity_regex = NULL
 ) {
+  # Validate entity_type is one of the allowed values
+  valid_types <- c("economy", "organization", "aggregate", "other")
+  if (!entity_type %in% valid_types) {
+    cli::cli_abort(
+      paste(
+        entity_type,
+        "is not a valid entity type. Must be one of:",
+        paste(valid_types, collapse = ", ")
+      )
+    )
+  }
+
   # Ensure the custom patterns object exists in the environment.
   if (!exists("custom_entity_patterns", envir = .econid_env)) {
     .econid_env$custom_entity_patterns <- tibble::tibble(
       entity_id    = character(),
       entity_name  = character(),
-      iso3c         = character(),
-      iso2c         = character(),
+      iso3c        = character(),
+      iso2c        = character(),
       entity_type  = character(),
       entity_regex = character()
     )
   } else {
     # Validate that the entity_id is not already in the patterns
     if (entity_id %in% list_entity_patterns()$entity_id) {
-      stop(
-        "The entity_id '", entity_id, "' already exists in the custom ",
-        "patterns. Please use a unique identifier."
+      cli::cli_abort(
+        paste(
+          "The entity_id", as.character(entity_id),
+          "already exists in the custom patterns.",
+          "Please use a unique identifier."
+        )
       )
     }
   }

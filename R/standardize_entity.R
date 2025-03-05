@@ -455,7 +455,8 @@ match_entities_with_patterns <- function(
         cli::cli_warn(c(
           "!" = paste("Ambiguous match for", original_value),
           "*" = paste(
-            "Matches multiple entity IDs:", matching_ids,
+            "Matches multiple entity IDs:",
+            paste(matching_ids, collapse = ", "),
             "\nThe output will contain duplicate rows."
           )
         ))

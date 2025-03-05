@@ -20,7 +20,7 @@ test_that(
         if (any(is.na(c(
           entity_id, entity_name, entity_regex, iso3c, iso2c, variant_names
         ))) || any(is.null(variant_names))) {
-          stop("Missing required fields in test_cases")
+          cli::cli_abort("Missing required fields in test_cases")
         }
 
         # Get the variants and ISO codes for the current entity
