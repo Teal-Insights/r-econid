@@ -72,7 +72,7 @@ add_entity_pattern <- function(
   } else {
     # Validate that the entity_id is not already in the patterns
     if (entity_id %in% list_entity_patterns()$entity_id) {
-      stop(
+      cli::cli_abort(
         "The entity_id '", entity_id, "' already exists in the custom ",
         "patterns. Please use a unique identifier."
       )
