@@ -183,9 +183,9 @@ standardize_entity <- function(
 
       # If it's the entity_id column, we need to validate that the values being
       # filled (i.e., in masked rows) are not already in entity_patterns
-      if (output_col == "entity_id") {
+      if (warn_ambiguous && output_col == "entity_id") {
         # Get the entity_id values that are already in entity_patterns
-        existing_ids <- entity_patterns[1]
+        existing_ids <- entity_patterns[[1]]
 
         # Get the entity_id values that are being filled
         filled_ids <- results[[input_col]][no_match_mask]
@@ -197,7 +197,7 @@ standardize_entity <- function(
             filled_ids[which(filled_ids %in% existing_ids)],
             "being filled over from",
             input_col,
-            "already exists in the entity_patterns data frame.",
+            "conflict(s) with a standard entity ID, which may cause ambiguity.",
             "Please use a unique identifier."
           ))
         }

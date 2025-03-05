@@ -1020,20 +1020,17 @@ test_that("fill_mapping validates uniqueness of entity_id values", {
     "NotACountry", "USA"  # Using "USA" which already exists in entity_patterns
   )
 
-  # Mock the entity_patterns to have a controlled set of IDs
-  mock_patterns <- tibble::tibble(
-    entity_id = c("USA", "FRA", "DEU"),
-    entity_name = c("United States", "France", "Germany"),
-    entity_type = c("economy", "economy", "economy"),
-    iso3c = c("USA", "FRA", "DEU"),
-    iso2c = c("US", "FR", "DE"),
-    entity_regex = c("^united states|us$", "^france|fra$", "^germany|deu$")
-  )
-
   # Use local_mocked_bindings to mock list_entity_patterns
   local_mocked_bindings(
     list_entity_patterns = function() {
-      mock_patterns
+      tibble::tibble(
+        entity_id = c("USA", "FRA", "DEU"),
+        entity_name = c("United States", "France", "Germany"),
+        entity_type = c("economy", "economy", "economy"),
+        iso3c = c("USA", "FRA", "DEU"),
+        iso2c = c("US", "FR", "DE"),
+        entity_regex = c("^united states|us$", "^france|fra$", "^germany|deu$")
+      )
     }
   )
 
@@ -1044,7 +1041,7 @@ test_that("fill_mapping validates uniqueness of entity_id values", {
       entity,
       fill_mapping = c(entity_id = "code")  # "code" contains "USA"
     ),
-    "already exists in the entity_patterns"
+    "The entity_id value"
   )
 
   #But should still perform the fill
@@ -1059,7 +1056,7 @@ test_that("fill_mapping validates uniqueness of entity_id values", {
   # This should work fine
   result <- standardize_entity(
     test_df2,
-    entity, code,
+    entity,
     fill_mapping = c(entity_id = "code")
   )
 
