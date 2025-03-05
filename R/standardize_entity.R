@@ -197,8 +197,8 @@ standardize_entity <- function(
             filled_ids[which(filled_ids %in% existing_ids)],
             "being filled over from",
             input_col,
-            "conflict(s) with a standard entity ID, which may cause ambiguity.",
-            "Please use a unique identifier."
+            "in rows that could not be standardized conflict(s) with a",
+            "standard entity ID, which may cause ambiguity."
           ))
         }
       }
