@@ -59,6 +59,26 @@ add_entity_pattern <- function(
     )
   }
 
+  # Ensure the custom patterns object exists in the environment.
+  if (!exists("custom_entity_patterns", envir = .econid_env)) {
+    .econid_env$custom_entity_patterns <- tibble::tibble(
+      entity_id    = character(),
+      entity_name  = character(),
+      iso3c         = character(),
+      iso2c         = character(),
+      entity_type  = character(),
+      entity_regex = character()
+    )
+  } else {
+    # Validate that the entity_id is not already in the patterns
+    if (entity_id %in% list_entity_patterns()$entity_id) {
+      cli::cli_abort(
+        "The entity_id '", entity_id, "' already exists in the custom ",
+        "patterns. Please use a unique identifier."
+      )
+    }
+  }
+
   # If no custom regex is supplied, build one from aliases (or default to
   # "entity_id|entity_name")
   if (is.null(entity_regex)) {
@@ -81,18 +101,6 @@ add_entity_pattern <- function(
     entity_type = entity_type,
     entity_regex = entity_regex
   )
-
-  # Ensure the custom patterns object exists in the environment.
-  if (!exists("custom_entity_patterns", envir = .econid_env)) {
-    .econid_env$custom_entity_patterns <- tibble::tibble(
-      entity_id    = character(),
-      entity_name  = character(),
-      iso3c         = character(),
-      iso2c         = character(),
-      entity_type  = character(),
-      entity_regex = character()
-    )
-  }
 
   # Retrieve, update, and reassign
   current_custom <- .econid_env$custom_entity_patterns
