@@ -53,7 +53,8 @@ add_entity_pattern <- function(
   if (!entity_type %in% valid_types) {
     cli::cli_abort(
       paste(
-        "'{entity_type}' is not a valid entity type. Must be one of:",
+        entity_type,
+        "is not a valid entity type. Must be one of:",
         paste(valid_types, collapse = ", ")
       )
     )
@@ -64,8 +65,8 @@ add_entity_pattern <- function(
     .econid_env$custom_entity_patterns <- tibble::tibble(
       entity_id    = character(),
       entity_name  = character(),
-      iso3c         = character(),
-      iso2c         = character(),
+      iso3c        = character(),
+      iso2c        = character(),
       entity_type  = character(),
       entity_regex = character()
     )
@@ -73,8 +74,11 @@ add_entity_pattern <- function(
     # Validate that the entity_id is not already in the patterns
     if (entity_id %in% list_entity_patterns()$entity_id) {
       cli::cli_abort(
-        "The entity_id '", entity_id, "' already exists in the custom ",
-        "patterns. Please use a unique identifier."
+        paste(
+          "The entity_id", as.character(entity_id),
+          "already exists in the custom patterns.",
+          "Please use a unique identifier."
+        )
       )
     }
   }

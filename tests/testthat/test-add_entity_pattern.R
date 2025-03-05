@@ -183,22 +183,24 @@ test_that("validates entity_type against allowed values", {
       aliases = NULL,
       entity_regex = NULL
     ),
-    "'invalid_type' is not a valid entity type"
+    "invalid_type is not a valid entity type"
   )
 
   # Test that valid types don't throw errors
   valid_types <- c("economy", "organization", "aggregate", "other")
-  for (valid_type in valid_types) {
+  for (i in seq_along(valid_types)) {
+    valid_type <- valid_types[i]
     # Mock the regex creation function to avoid side effects
     local_mocked_bindings(
       create_entity_regex = function(aliases) "regex"
     )
 
-    # Should not error with valid type
+    # Should not error with valid type - increment the entity_id for each
+    # iteration
     expect_no_error(
       add_entity_pattern(
-        entity_id = 6,
-        entity_name = "ValidLand",
+        entity_id = paste0("7", i),  # Use unique IDs: "71", "72", "73", "74"
+        entity_name = paste0("ValidLand", i),
         entity_type = valid_type,
         aliases = NULL,
         entity_regex = NULL
@@ -232,7 +234,7 @@ test_that("error is thrown when duplicating default pattern entity_id", {
       entity_type = "economy"
     ),
     paste0(
-      "The entity_id 'duplicate_id1' already exists in the custom ",
+      "The entity_id duplicate_id1 already exists in the custom ",
       "patterns. Please use a unique identifier."
     )
   )
@@ -256,7 +258,7 @@ test_that("error is thrown when duplicating custom pattern entity_id", {
       entity_type = "organization"
     ),
     paste0(
-      "The entity_id 'duplicate_id2' already exists in the custom ",
+      "The entity_id duplicate_id2 already exists in the custom ",
       "patterns. Please use a unique identifier."
     )
   )
