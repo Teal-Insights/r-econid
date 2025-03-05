@@ -15,7 +15,7 @@
 #' @keywords internal
 create_entity_regex <- function(names) {
   if (!is.character(names)) {
-    stop("`names` must be a character vector.", call. = FALSE)
+    cli::cli_abort("`names` must be a character vector.")
   }
 
   # Process each name individually

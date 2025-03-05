@@ -170,3 +170,39 @@ test_that("returns invisible NULL", {
   expect_null(vis$value)
   expect_false(vis$visible)
 })
+
+test_that("validates entity_type against allowed values", {
+  local_clean_econid_patterns()
+
+  # Test with invalid entity_type
+  expect_error(
+    add_entity_pattern(
+      entity_id = 6,
+      entity_name = "InvalidLand",
+      entity_type = "invalid_type",
+      aliases = NULL,
+      entity_regex = NULL
+    ),
+    "'invalid_type' is not a valid entity type"
+  )
+
+  # Test that valid types don't throw errors
+  valid_types <- c("economy", "organization", "aggregate", "other")
+  for (valid_type in valid_types) {
+    # Mock the regex creation function to avoid side effects
+    local_mocked_bindings(
+      create_entity_regex = function(aliases) "regex"
+    )
+
+    # Should not error with valid type
+    expect_no_error(
+      add_entity_pattern(
+        entity_id = 6,
+        entity_name = "ValidLand",
+        entity_type = valid_type,
+        aliases = NULL,
+        entity_regex = NULL
+      )
+    )
+  }
+})

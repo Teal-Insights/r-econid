@@ -48,6 +48,17 @@ add_entity_pattern <- function(
   aliases = NULL,
   entity_regex = NULL
 ) {
+  # Validate entity_type is one of the allowed values
+  valid_types <- c("economy", "organization", "aggregate", "other")
+  if (!entity_type %in% valid_types) {
+    cli::cli_abort(
+      paste(
+        "'{entity_type}' is not a valid entity type. Must be one of:",
+        paste(valid_types, collapse = ", ")
+      )
+    )
+  }
+
   # If no custom regex is supplied, build one from aliases (or default to
   # "entity_id|entity_name")
   if (is.null(entity_regex)) {

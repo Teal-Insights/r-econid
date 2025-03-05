@@ -6,7 +6,7 @@ dotenv::load_dot_env(".env")
 
 # Check if X-RAPIDAPI-KEY is set and stop if not
 if (Sys.getenv("X-RAPIDAPI-KEY") == "") {
-  stop("X-RAPIDAPI-KEY is not set")
+  cli::cli_abort("X-RAPIDAPI-KEY is not set")
 }
 
 # Set headers
