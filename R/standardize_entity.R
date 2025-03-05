@@ -351,6 +351,9 @@ match_entities_with_patterns <- function(
   patterns,
   warn_ambiguous = TRUE
 ) {
+  # Get the .data pronoun for tidy data masking
+  .data <- dplyr::.data
+
   # Get the column names for entity_regex and entity_id in the patterns data
   # frame
   entity_regex_col <- names(patterns)[6]
@@ -417,7 +420,7 @@ match_entities_with_patterns <- function(
     matched_entities,
     unmatched_entities
   ) |>
-    dplyr::select(-.row_id) # nolint
+    dplyr::select(-".row_id")
 
   # If no patterns columns exist in the result (which happens when all values
   # in data are NA or no matches are found), add these columns with NA values
@@ -443,7 +446,7 @@ match_entities_with_patterns <- function(
         entity_ids = list(unique(!!rlang::sym(entity_id_col))),
         count = dplyr::n()
       ) |>
-      dplyr::filter(count > 1) # nolint
+      dplyr::filter(.data$count > 1)
 
     # Warn for each ambiguous match
     if (nrow(ambiguous_targets) > 0) {
