@@ -74,6 +74,8 @@ library(econid)
 
 Below is a high-level overview of how `econid` works in practice, followed by a more detailed description of the main function and its parameters. The examples and tests illustrate typical usage patterns.
 
+Use these patterns to explore the package and integrate it into your data cleaning workflows. For finer-grained operations (e.g., fuzzy filter and search), keep an eye on the package for future enhancements.
+
 ### Package Summary
 
 1. **Input validation**  
@@ -196,7 +198,7 @@ standardize_entity(
   A logical indicating whether to warn when overwriting existing entity columns. Defaults to `TRUE`.
 
 - **.before** *(optional)*  
-  Column name or position to insert the standardized columns before. Defaults to the first column.
+  Column name or position to insert the standardized columns before. If NULL (default), columns are inserted at the beginning of the dataframe. Can be a character vector specifying the column name or a numeric value specifying the column index.
 
 #### Returns
 
@@ -234,6 +236,11 @@ result_custom <- standardize_entity(df_custom, entity)
 print(result_custom)
 ```
 
-Use these patterns to explore the package and integrate it into your data cleaning workflows. For finer-grained operations (e.g., fuzzy filter and search), keep an eye on the package for future enhancements.
 
-We welcome your feedback and contributions!
+### `reset_custom_entity_patterns()` Function
+
+The `reset_custom_entity_patterns()` function allows you to clear all custom entity patterns that have been added during the current R session. This is useful when you want to start fresh with only the default entity patterns.
+
+## Contributing
+
+We welcome your feedback and contributions! Please submit suggestions for improvements and extensions on the package's [Github Issues](https://github.com/Teal-Insights/r-econid/issues) page.

@@ -45,11 +45,11 @@ For example, \code{c(entity_id = "country_code", entity_name = "country_name")}
 will fill missing entity_id values with values from the country_code column
 and missing entity_name values with values from the country_name column.}
 
-\item{default_entity_type}{Character; the default entity type to use for
-entities that do not match any of the patterns. Options are "economy",
-"organization", "aggregate", or "other". If this argument is not supplied,
-the default value will be NA_character_. Argument will be ignored if
-output_cols do not include "entity_type".}
+\item{default_entity_type}{Character or NA; the default entity type to use
+for entities that do not match any of the patterns. Options are "economy",
+"organization", "aggregate", "other", or NA_character_. Defaults to
+NA_character_. This argument is only used when "entity_type" is included in
+output_cols.}
 
 \item{warn_ambiguous}{Logical; whether to warn about ambiguous matches}
 
@@ -59,9 +59,10 @@ output_cols do not include "entity_type".}
 entity_* columns. Defaults to TRUE.}
 
 \item{.before}{Column name or position to insert the standardized columns
-before. Defaults to the first target column. Can be a character vector
-specifying the column name or a numeric value specifying the column index.
-If the specified column is not found in the data, an error is thrown.}
+before. If NULL (default), columns are inserted at the beginning of the
+dataframe. Can be a character vector specifying the column name or a
+numeric value specifying the column index. If the specified column is not
+found in the data, an error is thrown.}
 }
 \value{
 A data frame with standardized entity information merged with the

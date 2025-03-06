@@ -97,6 +97,10 @@ Below is a high-level overview of how `econid` works in practice,
 followed by a more detailed description of the main function and its
 parameters. The examples and tests illustrate typical usage patterns.
 
+Use these patterns to explore the package and integrate it into your
+data cleaning workflows. For finer-grained operations (e.g., fuzzy
+filter and search), keep an eye on the package for future enhancements.
+
 ### Package Summary
 
 1.  **Input validation**  
@@ -281,8 +285,10 @@ standardize_entity(
   columns. Defaults to `TRUE`.
 
 - **.before** *(optional)*  
-  Column name or position to insert the standardized columns before.
-  Defaults to the first column.
+  Column name or position to insert the standardized columns before. If
+  NULL (default), columns are inserted at the beginning of the
+  dataframe. Can be a character vector specifying the column name or a
+  numeric value specifying the column index.
 
 #### Returns
 
@@ -335,8 +341,15 @@ print(result_custom)
     ## 1       USA United States     economy        United States
     ## 2   BJ-CITY  Beijing City     economy Beijing Municipality
 
-Use these patterns to explore the package and integrate it into your
-data cleaning workflows. For finer-grained operations (e.g., fuzzy
-filter and search), keep an eye on the package for future enhancements.
+### `reset_custom_entity_patterns()` Function
 
-We welcome your feedback and contributions!
+The `reset_custom_entity_patterns()` function allows you to clear all
+custom entity patterns that have been added during the current R
+session. This is useful when you want to start fresh with only the
+default entity patterns.
+
+## Contributing
+
+We welcome your feedback and contributions! Please submit suggestions
+for improvements and extensions on the package’s [Github
+Issues](https://github.com/Teal-Insights/r-econid/issues) page.
