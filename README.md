@@ -5,7 +5,14 @@
 
 <!-- badges: start -->
 
+[![CRAN
+status](https://www.r-pkg.org/badges/version/econid)](https://cran.r-project.org/package=econid)
+[![CRAN
+downloads](https://cranlogs.r-pkg.org/badges/econid)](https://cran.r-project.org/package=econid)
 [![R-CMD-check](https://github.com/Teal-Insights/r-econid/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/Teal-Insights/r-econid/actions/workflows/R-CMD-check.yaml)
+[![Lint](https://github.com/Teal-Insights/r-econid/actions/workflows/lint.yaml/badge.svg)](https://github.com/Teal-Insights/r-econid/actions/workflows/lint.yaml)
+[![Codecov test
+coverage](https://codecov.io/gh/Teal-Insights/r-econid/graph/badge.svg)](https://app.codecov.io/gh/Teal-Insights/r-econid)
 <!-- badges: end -->
 
 ## Overview
