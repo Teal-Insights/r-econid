@@ -175,20 +175,7 @@ df <- data.frame(
 
 # Using with dplyr pipeline
 library(dplyr)
-```
 
-    ## 
-    ## Attaching package: 'dplyr'
-
-    ## The following objects are masked from 'package:stats':
-    ## 
-    ##     filter, lag
-
-    ## The following objects are masked from 'package:base':
-    ## 
-    ##     intersect, setdiff, setequal, union
-
-``` r
 df |>
   standardize_entity(entity, code) |>
   filter(!is.na(entity_id)) |>

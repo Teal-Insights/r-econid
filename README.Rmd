@@ -123,7 +123,7 @@ flowchart TD
 
 ### `standardize_entity()` Function
 
-``` {r}
+``` {r, message = FALSE, warning = FALSE}
 # Basic example
 df <- data.frame(
   entity = c("United States", "China", "NotACountry"),
