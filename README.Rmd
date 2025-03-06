@@ -105,6 +105,7 @@ flowchart TD
     A[Start with data containing economic entities] --> B[Non-standard entities without ISO codes?]
     B -->|Yes| C[Add custom entity patterns with add_entity_pattern]
     B -->|No| D[Proceed to standardization]
+    B -->|Yes, but skip| D
     C --> D
     
     D --> E[How to handle unmatched entities?]
@@ -114,7 +115,7 @@ flowchart TD
     F --> H[Call standardize_entity with data and identifier columns]
     G --> H
     
-    H --> I[Multiple entity types in same dataset?]
+    H --> I[Additional column(s) to standardize in same dataframe?]
     I -->|Yes| J[Call standardize_entity again with prefix parameter]
     I -->|No| K[Analysis-ready data with standardized entities]
     J --> K
