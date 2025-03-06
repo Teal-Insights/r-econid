@@ -126,6 +126,7 @@
 <h2 id="usage">Usage<a class="anchor" aria-label="anchor" href="#usage"></a>
 </h2>
 <p>Below is a high-level overview of how <code>econid</code> works in practice, followed by a more detailed description of the main function and its parameters. The examples and tests illustrate typical usage patterns.</p>
+<p>Use these patterns to explore the package and integrate it into your data cleaning workflows. For finer-grained operations (e.g., fuzzy filter and search), keep an eye on the package for future enhancements.</p>
 <div class="section level3">
 <h3 id="package-summary">Package Summary<a class="anchor" aria-label="anchor" href="#package-summary"></a>
 </h3>
@@ -159,29 +160,15 @@ Once the function finds a match, it returns a new or augmented data frame with s
 <div class="section level3">
 <h3 id="workflow">Workflow<a class="anchor" aria-label="anchor" href="#workflow"></a>
 </h3>
-<pre class="mermaid"><code>flowchart TD
-    A[Start with data containing economic entities] --&gt; B{Non-standard entities&lt;br/&gt;without ISO codes?}
-    B --&gt;|Yes| C[Add custom entity patterns&lt;br/&gt;with add_entity_pattern()]
-    B --&gt;|No| D[Proceed to standardization]
-    C --&gt; D
-
-    D --&gt; E{How to handle&lt;br/&gt;unmatched entities?}
-    E --&gt;|Leave as NA| F[Omit fill_mapping and&lt;br/&gt;default_entity_type args]
-    E --&gt;|Fill from existing columns| G[Use fill_mapping and&lt;br/&gt;default_entity_type]
-
-    F --&gt; H[Call standardize_entity&lt;br/&gt;with data and identifier columns]
-    G --&gt; H
-
-    H --&gt; I{Multiple entity types&lt;br/&gt;in same dataset?}
-    I --&gt;|Yes| J[Call standardize_entity again&lt;br/&gt;with prefix parameter]
-    I --&gt;|No| K[Analysis-ready data&lt;br/&gt;with standardized entities]
-    J --&gt; K</code></pre>
+<figure><img src="README_files/workflow.png" alt="Workflow"><figcaption aria-hidden="true">
+Workflow
+</figcaption></figure>
 </div>
 <div class="section level3">
 <h3 id="standardize_entity-function">
 <code>standardize_entity()</code> Function<a class="anchor" aria-label="anchor" href="#standardize_entity-function"></a>
 </h3>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Basic example</span></span>
 <span><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
 <span>  entity <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"United States"</span>, <span class="st">"China"</span>, <span class="st">"NotACountry"</span><span class="op">)</span>,</span>
@@ -190,19 +177,9 @@ Once the function finds a match, it returns a new or augmented data frame with s
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Using with dplyr pipeline</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a></span><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb5"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="do">## </span></span>
-<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a><span class="do">## Attaching package: 'dplyr'</span></span>
-<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a></span>
-<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a><span class="do">## The following objects are masked from 'package:stats':</span></span>
-<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a><span class="do">## </span></span>
-<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a><span class="do">##     filter, lag</span></span>
-<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a></span>
-<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a><span class="do">## The following objects are masked from 'package:base':</span></span>
-<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a><span class="do">## </span></span>
-<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a><span class="do">##     intersect, setdiff, setequal, union</span></span></code></pre></div>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">df</span> <span class="op">|&gt;</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a></span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">df</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="reference/standardize_entity.html">standardize_entity</a></span><span class="op">(</span><span class="va">entity</span>, <span class="va">code</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">entity_id</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>entity_category <span class="op">=</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/case_when.html" class="external-link">case_when</a></span><span class="op">(</span></span>
@@ -210,11 +187,11 @@ Once the function finds a match, it returns a new or augmented data frame with s
 <span>    <span class="cn">TRUE</span> <span class="op">~</span> <span class="st">"Other"</span></span>
 <span>  <span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">entity_name</span>, <span class="va">entity_category</span>, <span class="va">obs_value</span><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb7"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="do">##     entity_name entity_category obs_value</span></span>
-<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a><span class="do">## 1 United States         Country         1</span></span>
-<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a><span class="do">## 2         China         Country         2</span></span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="do">##     entity_name entity_category obs_value</span></span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a><span class="do">## 1 United States         Country         1</span></span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a><span class="do">## 2         China         Country         2</span></span></code></pre></div>
 <p>You can also use the function directly without a pipeline:</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="reference/standardize_entity.html">standardize_entity</a></span><span class="op">(</span></span>
 <span>  data <span class="op">=</span> <span class="va">df</span>,</span>
 <span>  <span class="va">entity</span>, <span class="va">code</span>,</span>
@@ -223,10 +200,10 @@ Once the function finds a match, it returns a new or augmented data frame with s
 <span>  default_entity_type <span class="op">=</span> <span class="cn">NA_character_</span>,</span>
 <span>  warn_ambiguous <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb9"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a><span class="do">##   entity_id   entity_name entity_type        entity code obs_value</span></span>
-<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a><span class="do">## 1       USA United States     economy United States  USA         1</span></span>
-<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a><span class="do">## 2       CHN         China     economy         China  CHN         2</span></span>
-<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a><span class="do">## 3      &lt;NA&gt;   NotACountry        &lt;NA&gt;   NotACountry  ZZZ         3</span></span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a><span class="do">##   entity_id   entity_name entity_type        entity code obs_value</span></span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a><span class="do">## 1       USA United States     economy United States  USA         1</span></span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a><span class="do">## 2       CHN         China     economy         China  CHN         2</span></span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a><span class="do">## 3      &lt;NA&gt;   NotACountry        &lt;NA&gt;   NotACountry  ZZZ         3</span></span></code></pre></div>
 <div class="section level4">
 <h4 id="parameters">Parameters<a class="anchor" aria-label="anchor" href="#parameters"></a>
 </h4>
@@ -280,7 +257,7 @@ A logical indicating whether to overwrite existing entity columns. Defaults to <
 <li><p><strong>warn_overwrite</strong> <em>(optional)</em><br>
 A logical indicating whether to warn when overwriting existing entity columns. Defaults to <code>TRUE</code>.</p></li>
 <li><p><strong>.before</strong> <em>(optional)</em><br>
-Column name or position to insert the standardized columns before. Defaults to the first column.</p></li>
+Column name or position to insert the standardized columns before. If NULL (default), columns are inserted at the beginning of the dataframe. Can be a character vector specifying the column name or a numeric value specifying the column index.</p></li>
 </ul>
 </div>
 <div class="section level4">
@@ -293,7 +270,7 @@ Column name or position to insert the standardized columns before. Defaults to t
 <h3 id="working-with-multiple-entities">Working with Multiple Entities<a class="anchor" aria-label="anchor" href="#working-with-multiple-entities"></a>
 </h3>
 <p>The <code><a href="reference/standardize_entity.html">standardize_entity()</a></code> function can be used to standardize multiple entities in the same dataset by using the <code>prefix</code> parameter:</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
 <span>  country_name <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"United States"</span>, <span class="st">"France"</span><span class="op">)</span>,</span>
 <span>  counterpart_name <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"China"</span>, <span class="st">"Germany"</span><span class="op">)</span></span>
@@ -302,19 +279,19 @@ Column name or position to insert the standardized columns before. Defaults to t
 <span><span class="va">df</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="reference/standardize_entity.html">standardize_entity</a></span><span class="op">(</span><span class="va">country_name</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="reference/standardize_entity.html">standardize_entity</a></span><span class="op">(</span><span class="va">counterpart_name</span>, prefix <span class="op">=</span> <span class="st">"counterpart"</span><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb11"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a><span class="do">##   counterpart_entity_id counterpart_entity_name counterpart_entity_type</span></span>
-<span id="cb11-2"><a href="#cb11-2" tabindex="-1"></a><span class="do">## 1                   CHN                   China                 economy</span></span>
-<span id="cb11-3"><a href="#cb11-3" tabindex="-1"></a><span class="do">## 2                   DEU                 Germany                 economy</span></span>
-<span id="cb11-4"><a href="#cb11-4" tabindex="-1"></a><span class="do">##   entity_id   entity_name entity_type  country_name counterpart_name</span></span>
-<span id="cb11-5"><a href="#cb11-5" tabindex="-1"></a><span class="do">## 1       USA United States     economy United States            China</span></span>
-<span id="cb11-6"><a href="#cb11-6" tabindex="-1"></a><span class="do">## 2       FRA        France     economy        France          Germany</span></span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a><span class="do">##   counterpart_entity_id counterpart_entity_name counterpart_entity_type</span></span>
+<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a><span class="do">## 1                   CHN                   China                 economy</span></span>
+<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a><span class="do">## 2                   DEU                 Germany                 economy</span></span>
+<span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a><span class="do">##   entity_id   entity_name entity_type  country_name counterpart_name</span></span>
+<span id="cb8-5"><a href="#cb8-5" tabindex="-1"></a><span class="do">## 1       USA United States     economy United States            China</span></span>
+<span id="cb8-6"><a href="#cb8-6" tabindex="-1"></a><span class="do">## 2       FRA        France     economy        France          Germany</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="add_entity_pattern-function">
 <code>add_entity_pattern()</code> Function<a class="anchor" aria-label="anchor" href="#add_entity_pattern-function"></a>
 </h3>
 <p>The <code><a href="reference/add_entity_pattern.html">add_entity_pattern()</a></code> function allows you to add custom entity patterns to the package. This is useful if you need to standardize entities that are not in the default list.</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="reference/add_entity_pattern.html">add_entity_pattern</a></span><span class="op">(</span></span>
 <span>  <span class="st">"BJ-CITY"</span>,</span>
 <span>  <span class="st">"Beijing City"</span>,</span>
@@ -325,12 +302,21 @@ Column name or position to insert the standardized columns before. Defaults to t
 <span><span class="va">df_custom</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>entity <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"United States"</span>, <span class="st">"Beijing Municipality"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">result_custom</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/standardize_entity.html">standardize_entity</a></span><span class="op">(</span><span class="va">df_custom</span>, <span class="va">entity</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result_custom</span><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb13"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a><span class="do">##   entity_id   entity_name entity_type               entity</span></span>
-<span id="cb13-2"><a href="#cb13-2" tabindex="-1"></a><span class="do">## 1       USA United States     economy        United States</span></span>
-<span id="cb13-3"><a href="#cb13-3" tabindex="-1"></a><span class="do">## 2   BJ-CITY  Beijing City     economy Beijing Municipality</span></span></code></pre></div>
-<p>Use these patterns to explore the package and integrate it into your data cleaning workflows. For finer-grained operations (e.g., fuzzy filter and search), keep an eye on the package for future enhancements.</p>
-<p>We welcome your feedback and contributions!</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a><span class="do">##   entity_id   entity_name entity_type               entity</span></span>
+<span id="cb10-2"><a href="#cb10-2" tabindex="-1"></a><span class="do">## 1       USA United States     economy        United States</span></span>
+<span id="cb10-3"><a href="#cb10-3" tabindex="-1"></a><span class="do">## 2   BJ-CITY  Beijing City     economy Beijing Municipality</span></span></code></pre></div>
 </div>
+<div class="section level3">
+<h3 id="reset_custom_entity_patterns-function">
+<code>reset_custom_entity_patterns()</code> Function<a class="anchor" aria-label="anchor" href="#reset_custom_entity_patterns-function"></a>
+</h3>
+<p>The <code><a href="reference/reset_custom_entity_patterns.html">reset_custom_entity_patterns()</a></code> function allows you to clear all custom entity patterns that have been added during the current R session. This is useful when you want to start fresh with only the default entity patterns.</p>
+</div>
+</div>
+<div class="section level2">
+<h2 id="contributing">Contributing<a class="anchor" aria-label="anchor" href="#contributing"></a>
+</h2>
+<p>We welcome your feedback and contributions! Please submit suggestions for improvements and extensions on the package’s <a href="https://github.com/Teal-Insights/r-econid/issues" class="external-link">Github Issues</a> page.</p>
 </div>
 </div>
 
@@ -368,7 +354,11 @@ Column name or position to insert the standardized columns before. Defaults to t
 <div class="dev-status">
 <h2 data-toc-skip>Dev status</h2>
 <ul class="list-unstyled">
+<li><a href="https://cran.r-project.org/package=econid" class="external-link"><img src="https://www.r-pkg.org/badges/version/econid" alt="CRAN status"></a></li>
+<li><a href="https://cran.r-project.org/package=econid" class="external-link"><img src="https://cranlogs.r-pkg.org/badges/econid" alt="CRAN downloads"></a></li>
 <li><a href="https://github.com/Teal-Insights/r-econid/actions/workflows/R-CMD-check.yaml" class="external-link"><img src="https://github.com/Teal-Insights/r-econid/actions/workflows/R-CMD-check.yaml/badge.svg" alt="R-CMD-check"></a></li>
+<li><a href="https://github.com/Teal-Insights/r-econid/actions/workflows/lint.yaml" class="external-link"><img src="https://github.com/Teal-Insights/r-econid/actions/workflows/lint.yaml/badge.svg" alt="Lint"></a></li>
+<li><a href="https://app.codecov.io/gh/Teal-Insights/r-econid" class="external-link"><img src="https://codecov.io/gh/Teal-Insights/r-econid/graph/badge.svg" alt="Codecov test coverage"></a></li>
 </ul>
 </div>
 

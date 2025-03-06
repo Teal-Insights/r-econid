@@ -99,11 +99,11 @@ and missing entity_name values with values from the country_name column.</p></dd
 
 
 <dt id="arg-default-entity-type">default_entity_type<a class="anchor" aria-label="anchor" href="#arg-default-entity-type"></a></dt>
-<dd><p>Character; the default entity type to use for
-entities that do not match any of the patterns. Options are "economy",
-"organization", "aggregate", or "other". If this argument is not supplied,
-the default value will be NA_character_. Argument will be ignored if
-output_cols do not include "entity_type".</p></dd>
+<dd><p>Character or NA; the default entity type to use
+for entities that do not match any of the patterns. Options are "economy",
+"organization", "aggregate", "other", or NA_character_. Defaults to
+NA_character_. This argument is only used when "entity_type" is included in
+output_cols.</p></dd>
 
 
 <dt id="arg-warn-ambiguous">warn_ambiguous<a class="anchor" aria-label="anchor" href="#arg-warn-ambiguous"></a></dt>
@@ -121,9 +121,10 @@ entity_* columns. Defaults to TRUE.</p></dd>
 
 <dt id="arg--before">.before<a class="anchor" aria-label="anchor" href="#arg--before"></a></dt>
 <dd><p>Column name or position to insert the standardized columns
-before. Defaults to the first target column. Can be a character vector
-specifying the column name or a numeric value specifying the column index.
-If the specified column is not found in the data, an error is thrown.</p></dd>
+before. If NULL (default), columns are inserted at the beginning of the
+dataframe. Can be a character vector specifying the column name or a
+numeric value specifying the column index. If the specified column is not
+found in the data, an error is thrown.</p></dd>
 
 </dl></div>
     <div class="section level2">
