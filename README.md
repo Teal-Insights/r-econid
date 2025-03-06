@@ -157,7 +157,7 @@ flowchart TD
     F --> H[Call standardize_entity with data and identifier columns]
     G --> H
     
-    H --> I[Additional column(s) to standardize in same dataframe?]
+    H --> I[Additional column to standardize in same dataframe?]
     I -->|Yes| J[Call standardize_entity again with prefix parameter]
     I -->|No| K[Analysis-ready data with standardized entities]
     J --> K
