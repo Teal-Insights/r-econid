@@ -149,26 +149,7 @@ filter and search), keep an eye on the package for future enhancements.
 
 ### Workflow
 
-``` mermaid
-flowchart TD
-    A[Start with data containing economic entities] --> B[Non-standard entities without ISO codes?]
-    B -->|Yes| C[Add custom entity patterns with add_entity_pattern]
-    B -->|No| D[Proceed to standardization]
-    B -->|Yes, but skip| D
-    C --> D
-    
-    D --> E[How to handle unmatched entities?]
-    E -->|Leave as NA| F[Omit fill_mapping and default_entity_type args]
-    E -->|Fill from existing columns| G[Use fill_mapping and default_entity_type]
-    
-    F --> H[Call standardize_entity with data and identifier columns]
-    G --> H
-    
-    H --> I[Additional column to standardize in same dataframe?]
-    I -->|Yes| J[Call standardize_entity again with prefix parameter]
-    I -->|No| K[Analysis-ready data with standardized entities]
-    J --> K
-```
+![](README_files/figure-gfm/unnamed-chunk-2-1.png)<!-- -->
 
 ### `standardize_entity()` Function
 

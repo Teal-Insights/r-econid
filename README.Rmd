@@ -1,5 +1,6 @@
 ---
 output: github_document
+always_allow_html: true
 ---
 
 <a href="https://teal-insights.github.io/r-econid"><img src="man/figures/logo.png" align="right" height="40" alt="r-econid website" /></a>
@@ -104,8 +105,9 @@ Use these patterns to explore the package and integrate it into your data cleani
 
 ### Workflow
 
-``` mermaid
-flowchart TD
+``` {r echo = FALSE, message = FALSE, warning = FALSE}
+DiagrammeR::mermaid("
+  graph TD
     A[Start with data containing economic entities] --> B[Non-standard entities without ISO codes?]
     B -->|Yes| C[Add custom entity patterns with add_entity_pattern]
     B -->|No| D[Proceed to standardization]
@@ -123,6 +125,7 @@ flowchart TD
     I -->|Yes| J[Call standardize_entity again with prefix parameter]
     I -->|No| K[Analysis-ready data with standardized entities]
     J --> K
+")
 ```
 
 ### `standardize_entity()` Function

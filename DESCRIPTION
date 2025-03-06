@@ -26,9 +26,10 @@ Suggests:
     renv,
     withr,
     covr,
-    DT
+    DT,
+    DiagrammeR
 Config/testthat/edition: 3
-URL: https://teal-insights.github.io/r-econid, https://github.com/Teal-Insights/r-econid
+URL: https://teal-insights.github.io/r-econid, https://github.com/Teal-Insights/r-econid, https://teal-insights.github.io/r-econid/
 BugReports: https://github.com/Teal-Insights/r-econid/issues
 Depends: 
     R (>= 4.1.0)
