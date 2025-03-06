@@ -102,21 +102,21 @@ Use these patterns to explore the package and integrate it into your data cleani
 
 ``` mermaid
 flowchart TD
-    A[Start with data containing economic entities] --> B{Non-standard entities<br/>without ISO codes?}
-    B -->|Yes| C[Add custom entity patterns<br/>with add_entity_pattern()]
+    A[Start with data containing economic entities] --> B[Non-standard entities without ISO codes?]
+    B -->|Yes| C[Add custom entity patterns with add_entity_pattern]
     B -->|No| D[Proceed to standardization]
     C --> D
     
-    D --> E{How to handle<br/>unmatched entities?}
-    E -->|Leave as NA| F[Omit fill_mapping and<br/>default_entity_type args]
-    E -->|Fill from existing columns| G[Use fill_mapping and<br/>default_entity_type]
+    D --> E[How to handle unmatched entities?]
+    E -->|Leave as NA| F[Omit fill_mapping and default_entity_type args]
+    E -->|Fill from existing columns| G[Use fill_mapping and default_entity_type]
     
-    F --> H[Call standardize_entity<br/>with data and identifier columns]
+    F --> H[Call standardize_entity with data and identifier columns]
     G --> H
     
-    H --> I{Multiple entity types<br/>in same dataset?}
-    I -->|Yes| J[Call standardize_entity again<br/>with prefix parameter]
-    I -->|No| K[Analysis-ready data<br/>with standardized entities]
+    H --> I[Multiple entity types in same dataset?]
+    I -->|Yes| J[Call standardize_entity again with prefix parameter]
+    I -->|No| K[Analysis-ready data with standardized entities]
     J --> K
 ```
 
