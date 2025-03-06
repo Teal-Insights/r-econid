@@ -5,7 +5,14 @@
 
 <!-- badges: start -->
 
+[![CRAN
+status](https://www.r-pkg.org/badges/version/econid)](https://cran.r-project.org/package=econid)
+[![CRAN
+downloads](https://cranlogs.r-pkg.org/badges/econid)](https://cran.r-project.org/package=econid)
 [![R-CMD-check](https://github.com/Teal-Insights/r-econid/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/Teal-Insights/r-econid/actions/workflows/R-CMD-check.yaml)
+[![Lint](https://github.com/Teal-Insights/r-econid/actions/workflows/lint.yaml/badge.svg)](https://github.com/Teal-Insights/r-econid/actions/workflows/lint.yaml)
+[![Codecov test
+coverage](https://codecov.io/gh/Teal-Insights/r-econid/graph/badge.svg)](https://app.codecov.io/gh/Teal-Insights/r-econid)
 <!-- badges: end -->
 
 ## Overview
@@ -97,6 +104,10 @@ Below is a high-level overview of how `econid` works in practice,
 followed by a more detailed description of the main function and its
 parameters. The examples and tests illustrate typical usage patterns.
 
+Use these patterns to explore the package and integrate it into your
+data cleaning workflows. For finer-grained operations (e.g., fuzzy
+filter and search), keep an eye on the package for future enhancements.
+
 ### Package Summary
 
 1.  **Input validation**  
@@ -138,25 +149,10 @@ parameters. The examples and tests illustrate typical usage patterns.
 
 ### Workflow
 
-``` mermaid
-flowchart TD
-    A[Start with data containing economic entities] --> B{Non-standard entities<br/>without ISO codes?}
-    B -->|Yes| C[Add custom entity patterns<br/>with add_entity_pattern()]
-    B -->|No| D[Proceed to standardization]
-    C --> D
-    
-    D --> E{How to handle<br/>unmatched entities?}
-    E -->|Leave as NA| F[Omit fill_mapping and<br/>default_entity_type args]
-    E -->|Fill from existing columns| G[Use fill_mapping and<br/>default_entity_type]
-    
-    F --> H[Call standardize_entity<br/>with data and identifier columns]
-    G --> H
-    
-    H --> I{Multiple entity types<br/>in same dataset?}
-    I -->|Yes| J[Call standardize_entity again<br/>with prefix parameter]
-    I -->|No| K[Analysis-ready data<br/>with standardized entities]
-    J --> K
-```
+<figure>
+<img src="README_files/workflow.png" alt="Workflow" />
+<figcaption aria-hidden="true">Workflow</figcaption>
+</figure>
 
 ### `standardize_entity()` Function
 
@@ -170,20 +166,7 @@ df <- data.frame(
 
 # Using with dplyr pipeline
 library(dplyr)
-```
 
-    ## 
-    ## Attaching package: 'dplyr'
-
-    ## The following objects are masked from 'package:stats':
-    ## 
-    ##     filter, lag
-
-    ## The following objects are masked from 'package:base':
-    ## 
-    ##     intersect, setdiff, setequal, union
-
-``` r
 df |>
   standardize_entity(entity, code) |>
   filter(!is.na(entity_id)) |>
@@ -281,8 +264,10 @@ standardize_entity(
   columns. Defaults to `TRUE`.
 
 - **.before** *(optional)*  
-  Column name or position to insert the standardized columns before.
-  Defaults to the first column.
+  Column name or position to insert the standardized columns before. If
+  NULL (default), columns are inserted at the beginning of the
+  dataframe. Can be a character vector specifying the column name or a
+  numeric value specifying the column index.
 
 #### Returns
 
@@ -335,8 +320,15 @@ print(result_custom)
     ## 1       USA United States     economy        United States
     ## 2   BJ-CITY  Beijing City     economy Beijing Municipality
 
-Use these patterns to explore the package and integrate it into your
-data cleaning workflows. For finer-grained operations (e.g., fuzzy
-filter and search), keep an eye on the package for future enhancements.
+### `reset_custom_entity_patterns()` Function
 
-We welcome your feedback and contributions!
+The `reset_custom_entity_patterns()` function allows you to clear all
+custom entity patterns that have been added during the current R
+session. This is useful when you want to start fresh with only the
+default entity patterns.
+
+## Contributing
+
+We welcome your feedback and contributions! Please submit suggestions
+for improvements and extensions on the package’s [Github
+Issues](https://github.com/Teal-Insights/r-econid/issues) page.

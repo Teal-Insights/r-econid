@@ -1062,3 +1062,65 @@ test_that("fill_mapping validates uniqueness of entity_id values", {
 
   expect_equal(result$entity_id, "XYZ")
 })
+
+test_that("validate_entity_inputs catches invalid inputs", {
+  # Test invalid data frame input
+  expect_error(
+    standardize_entity(
+      list(a = 1, b = 2),  # Not a data frame
+      col1,
+      output_cols = c("entity_id", "entity_name")
+    ),
+    "Input .* must be a data frame or tibble"
+  )
+
+  # Test non-existent target columns
+  test_df <- tibble::tribble(
+    ~existing_col,
+    "United States"
+  )
+
+  expect_error(
+    standardize_entity(
+      test_df,
+      non_existent_col,  # Column that doesn't exist
+      output_cols = c("entity_id", "entity_name")
+    ),
+    "Target column\\(s\\) .* must be found in data"
+  )
+})
+
+test_that("prefix validation works correctly", {
+  test_df <- tibble::tribble(
+    ~country,
+    "United States"
+  )
+
+  # Test invalid prefix types
+  expect_error(
+    standardize_entity(
+      test_df,
+      country,
+      prefix = c("prefix1", "prefix2")  # Multiple strings
+    ),
+    "Prefix must be a single character string"
+  )
+
+  expect_error(
+    standardize_entity(
+      test_df,
+      country,
+      prefix = 123  # Number instead of string
+    ),
+    "Prefix must be a single character string"
+  )
+
+  # Verify that a valid prefix still works
+  expect_no_error(
+    standardize_entity(
+      test_df,
+      country,
+      prefix = "test"
+    )
+  )
+})

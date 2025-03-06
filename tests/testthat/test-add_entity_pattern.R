@@ -23,8 +23,8 @@ test_that("adds default alias when no aliases are provided", {
     entity_regex = NULL
   )
 
-  # Check that .econid_env was created and a row was appended.
-  cp <- get("custom_entity_patterns", envir = .econid_env)
+  # Check the custom patterns from options instead of .econid_env
+  cp <- getOption("econid.custom_entity_patterns")
   expect_equal(nrow(cp), 1)
   expect_equal(cp$entity_id[1], "1")
   expect_equal(cp$entity_name[1], "Testland")
@@ -54,7 +54,7 @@ test_that("custom entity_regex overrides generated value", {
     entity_regex = custom_regex
   )
 
-  cp <- get("custom_entity_patterns", envir = .econid_env)
+  cp <- getOption("econid.custom_entity_patterns")
   expect_equal(nrow(cp), 1)
   expect_equal(cp$entity_regex[1], custom_regex)
 
@@ -82,7 +82,7 @@ test_that("uses provided aliases to create regex", {
     entity_regex = NULL
   )
 
-  cp <- get("custom_entity_patterns", envir = .econid_env)
+  cp <- getOption("econid.custom_entity_patterns")
   expect_equal(nrow(cp), 1)
   expect_equal(cp$entity_regex[1], expected_regex)
 })
@@ -114,7 +114,7 @@ test_that("multiple invocations are cumulative and in order", {
     entity_regex = custom_regex
   )
 
-  cp <- get("custom_entity_patterns", envir = .econid_env)
+  cp <- getOption("econid.custom_entity_patterns")
   expect_equal(nrow(cp), 2)
   expect_equal(cp$entity_id, c("1", "2"))
   expect_equal(cp$entity_name, c("Country1", "Country2"))
@@ -141,8 +141,8 @@ test_that("internal environment and table are created if missing", {
     entity_regex = NULL
   )
 
-  # Check that the internal environment was created.
-  cp <- get("custom_entity_patterns", envir = .econid_env)
+  # Check that the option was properly populated
+  cp <- getOption("econid.custom_entity_patterns")
   expected_cols <- c(
     "entity_id", "entity_name", "iso3c",
     "iso2c", "entity_type", "entity_regex"
@@ -264,7 +264,7 @@ test_that("error is thrown when duplicating custom pattern entity_id", {
   )
 
   # Verify only one pattern was added
-  cp <- get("custom_entity_patterns", envir = .econid_env)
+  cp <- getOption("econid.custom_entity_patterns")
   expect_equal(nrow(cp), 1)
   expect_equal(cp$entity_name[1], "Original Entity")
 })

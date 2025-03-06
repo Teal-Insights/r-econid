@@ -60,31 +60,21 @@ add_entity_pattern <- function(
     )
   }
 
-  # Ensure the custom patterns object exists in the environment.
-  if (!exists("custom_entity_patterns", envir = .econid_env)) {
-    .econid_env$custom_entity_patterns <- tibble::tibble(
-      entity_id    = character(),
-      entity_name  = character(),
-      iso3c        = character(),
-      iso2c        = character(),
-      entity_type  = character(),
-      entity_regex = character()
-    )
-  } else {
-    # Validate that the entity_id is not already in the patterns
-    if (entity_id %in% list_entity_patterns()$entity_id) {
-      cli::cli_abort(
-        paste(
-          "The entity_id", as.character(entity_id),
-          "already exists in the custom patterns.",
-          "Please use a unique identifier."
-        )
+  # Get current custom patterns from options
+  custom_patterns <- getOption("econid.custom_entity_patterns")
+
+  # Validate that the entity_id is not already in the patterns
+  if (entity_id %in% list_entity_patterns()$entity_id) {
+    cli::cli_abort(
+      paste(
+        "The entity_id", as.character(entity_id),
+        "already exists in the custom patterns.",
+        "Please use a unique identifier."
       )
-    }
+    )
   }
 
-  # If no custom regex is supplied, build one from aliases (or default to
-  # "entity_id|entity_name")
+  # If no custom regex is supplied, build one from aliases
   if (is.null(entity_regex)) {
     if (is.null(aliases) || length(aliases) == 0) {
       aliases <- c(entity_id, entity_name)
@@ -95,21 +85,19 @@ add_entity_pattern <- function(
     entity_regex <- create_entity_regex(aliases)
   }
 
-  # Create a new tibble row with the provided details.
-  # Coerce entity_id to character to match the type in the stored tibble.
+  # Create a new tibble row with the provided details
   new_pattern <- tibble::tibble(
     entity_id   = as.character(entity_id),
     entity_name = entity_name,
-    iso3c        = NA_character_,
-    iso2c        = NA_character_,
+    iso3c       = NA_character_,
+    iso2c       = NA_character_,
     entity_type = entity_type,
     entity_regex = entity_regex
   )
 
-  # Retrieve, update, and reassign
-  current_custom <- .econid_env$custom_entity_patterns
-  updated_custom <- dplyr::bind_rows(current_custom, new_pattern)
-  .econid_env$custom_entity_patterns <- updated_custom
+  # Update the custom patterns option
+  updated_custom <- dplyr::bind_rows(custom_patterns, new_pattern)
+  options(econid.custom_entity_patterns = updated_custom)
 
   invisible(NULL)
 }

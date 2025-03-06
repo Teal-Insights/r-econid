@@ -16,3 +16,4 @@
 ^.cursorrules$
 ^.specstory$
 ^bench$
+^README_files$

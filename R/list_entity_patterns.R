@@ -24,15 +24,13 @@ list_entity_patterns <- function() {
   # Get built-in patterns
   builtin <- entity_patterns
 
-  # Create the .econid_env if it doesn't exist
-  if (!exists(".econid_env", mode = "environment")) {
-    .econid_env <- new.env(parent = emptyenv())
-    assign(".econid_env", .econid_env, envir = .GlobalEnv)
-  }
+  # Get custom patterns from options
+  custom <- getOption("econid.custom_entity_patterns")
 
-  # Check if custom_entity_patterns exists, create empty tibble if not
-  if (!exists("custom_entity_patterns", envir = .econid_env)) {
-    .econid_env$custom_entity_patterns <- tibble::tibble(
+  # If custom patterns option is NULL (shouldn't happen with proper .onLoad),
+  # initialize it to empty tibble
+  if (is.null(custom)) {
+    custom <- tibble::tibble(
       entity_id    = character(),
       entity_name  = character(),
       iso3c        = character(),
@@ -40,10 +38,8 @@ list_entity_patterns <- function() {
       entity_type  = character(),
       entity_regex = character()
     )
+    options(econid.custom_entity_patterns = custom)
   }
-
-  # Get custom patterns
-  custom <- get("custom_entity_patterns", envir = .econid_env)
 
   # Combine built-in and custom patterns
   dplyr::bind_rows(builtin, custom)

@@ -32,19 +32,20 @@ valid_cols <- c(
 #'   For example, `c(entity_id = "country_code", entity_name = "country_name")`
 #'   will fill missing entity_id values with values from the country_code column
 #'   and missing entity_name values with values from the country_name column.
-#' @param default_entity_type Character; the default entity type to use for
-#'   entities that do not match any of the patterns. Options are "economy",
-#'   "organization", "aggregate", or "other". If this argument is not supplied,
-#'   the default value will be NA_character_. Argument will be ignored if
-#'   output_cols do not include "entity_type".
+#' @param default_entity_type Character or NA; the default entity type to use
+#'   for entities that do not match any of the patterns. Options are "economy",
+#'   "organization", "aggregate", "other", or NA_character_. Defaults to
+#'   NA_character_. This argument is only used when "entity_type" is included in
+#'   output_cols.
 #' @param warn_ambiguous Logical; whether to warn about ambiguous matches
 #' @param overwrite Logical; whether to overwrite existing entity_* columns
 #' @param warn_overwrite Logical; whether to warn when overwriting existing
 #'   entity_* columns. Defaults to TRUE.
 #' @param .before Column name or position to insert the standardized columns
-#'   before. Defaults to the first target column. Can be a character vector
-#'   specifying the column name or a numeric value specifying the column index.
-#'   If the specified column is not found in the data, an error is thrown.
+#'   before. If NULL (default), columns are inserted at the beginning of the
+#'   dataframe. Can be a character vector specifying the column name or a
+#'   numeric value specifying the column index. If the specified column is not
+#'   found in the data, an error is thrown.
 #'
 #' @return A data frame with standardized entity information merged with the
 #'   input data. The standardized columns are placed directly to the left of the
@@ -351,6 +352,9 @@ match_entities_with_patterns <- function(
   patterns,
   warn_ambiguous = TRUE
 ) {
+  # Get the .data pronoun for tidy data masking
+  .data <- dplyr::.data
+
   # Get the column names for entity_regex and entity_id in the patterns data
   # frame
   entity_regex_col <- names(patterns)[6]
@@ -417,7 +421,7 @@ match_entities_with_patterns <- function(
     matched_entities,
     unmatched_entities
   ) |>
-    dplyr::select(-.row_id) # nolint
+    dplyr::select(-".row_id")
 
   # If no patterns columns exist in the result (which happens when all values
   # in data are NA or no matches are found), add these columns with NA values
@@ -443,7 +447,7 @@ match_entities_with_patterns <- function(
         entity_ids = list(unique(!!rlang::sym(entity_id_col))),
         count = dplyr::n()
       ) |>
-      dplyr::filter(count > 1) # nolint
+      dplyr::filter(.data$count > 1)
 
     # Warn for each ambiguous match
     if (nrow(ambiguous_targets) > 0) {
