@@ -1,6 +1,5 @@
 ---
 output: github_document
-always_allow_html: true
 ---
 
 <a href="https://teal-insights.github.io/r-econid"><img src="man/figures/logo.png" align="right" height="40" alt="r-econid website" /></a>
