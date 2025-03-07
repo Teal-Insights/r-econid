@@ -11,22 +11,15 @@ RoxygenNote: 7.3.2
 Imports: 
     cli,
     dplyr,
+    purrr,
     fuzzyjoin,
     rlang,
-    tibble
+    tibble,
+    tidyr
 Suggests:
     testthat (>= 3.0.0),
-    devtools (>= 2.4.5),
-    lintr (>= 3.1.2),
-    dotenv,
-    tidyr,
-    ellmer,
-    purrr,
     stringr,
-    renv,
-    withr,
-    covr,
-    DT
+    withr
 Config/testthat/edition: 3
 URL: https://teal-insights.github.io/r-econid/, https://github.com/Teal-Insights/r-econid
 BugReports: https://github.com/Teal-Insights/r-econid/issues

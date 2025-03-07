@@ -1,3 +1,8 @@
+# Install dotenv if not already present
+if (!requireNamespace("dotenv", quietly = TRUE)) {
+  install.packages("dotenv")
+}
+
 # Set API endpoint url
 url <- "https://rest-countries10.p.rapidapi.com/countries"
 

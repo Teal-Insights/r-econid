@@ -1,3 +1,18 @@
+# Install ellmer if not already present
+if (!requireNamespace("ellmer", quietly = TRUE)) {
+  install.packages("ellmer")
+}
+
+# Install dotenv if not already present
+if (!requireNamespace("dotenv", quietly = TRUE)) {
+  install.packages("dotenv")
+}
+
+# Install usethis if not already present
+if (!requireNamespace("usethis", quietly = TRUE)) {
+  install.packages("usethis")
+}
+
 dotenv::load_dot_env()
 
 system_patterns <- entity_patterns
