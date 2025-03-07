@@ -1,9 +1,9 @@
 Package: econid
-Title: Economic Entity Name and ID Standardization
+Title: Economic Entity Identifier Standardization
 Version: 0.0.1
 Authors@R: 
     c(person("Teal Insights", email = "lte@tealinsights.com", role = c("aut", "cre", "cph")))
-Description: Provides standardized entity (economy, aggregate, institution, etc.) name and id mappings for working with economic data published by the IMF and World Bank. Aims to facilitate consistent data analysis and reporting.
+Description: Provides utility functions for standardizing economic entity (economy, aggregate, institution, etc.) name and id in economic datasets such as those published by the International Monetary Fund and World Bank. Aims to facilitate consistent data analysis, reporting, and joining across datasets. Used as a foundational building block in the 'econdataverse' family of packages (<https://www.econdataverse.org>).
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
