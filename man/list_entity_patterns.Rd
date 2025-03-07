@@ -27,4 +27,3 @@ identifying economic indicators. It combines the patterns from the built-in
 patterns <- list_entity_patterns()
 
 }
-\keyword{internal}

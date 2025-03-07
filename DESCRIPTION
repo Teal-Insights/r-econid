@@ -1,6 +1,6 @@
 Package: econid
-Title: Standardized Geography for Economists
-Version: 0.0.1.9003
+Title: Economic Entity Name and ID Standardization
+Version: 0.0.1
 Authors@R: 
     c(person("Teal Insights", email = "lte@tealinsights.com", role = c("aut", "cre", "cph")))
 Description: Provides standardized entity (economy, aggregate, institution, etc.) name and id mappings for working with economic data published by the IMF and World Bank. Aims to facilitate consistent data analysis and reporting.
@@ -28,7 +28,7 @@ Suggests:
     covr,
     DT
 Config/testthat/edition: 3
-URL: https://teal-insights.github.io/r-econid, https://github.com/Teal-Insights/r-econid, https://teal-insights.github.io/r-econid/
+URL: https://teal-insights.github.io/r-econid/, https://github.com/Teal-Insights/r-econid
 BugReports: https://github.com/Teal-Insights/r-econid/issues
 Depends: 
     R (>= 4.1.0)
