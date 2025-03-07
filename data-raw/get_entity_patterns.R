@@ -1,3 +1,8 @@
+# Install usethis if not already present
+if (!requireNamespace("usethis", quietly = TRUE)) {
+  install.packages("usethis")
+}
+
 entity_patterns <- tibble::tribble(
   ~entity_name, ~entity_regex, ~iso3c, ~iso2c,
 

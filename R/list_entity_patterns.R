@@ -19,7 +19,6 @@
 #' patterns <- list_entity_patterns()
 #'
 #' @export
-#' @keywords internal
 list_entity_patterns <- function() {
   # Get built-in patterns
   builtin <- entity_patterns

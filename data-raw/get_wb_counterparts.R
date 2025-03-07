@@ -1,3 +1,26 @@
+
+# Install httr2 if not already present
+if (!requireNamespace("httr2", quietly = TRUE)) {
+  install.packages("httr2")
+}
+
+# Install jsonlite if not already present
+if (!requireNamespace("jsonlite", quietly = TRUE)) {
+  install.packages("jsonlite")
+}
+
+if (!requireNamespace("usethis", quietly = TRUE)) {
+  install.packages("usethis")
+}
+
+if (!requireNamespace("tidyr", quietly = TRUE)) {
+  install.packages("tidyr")
+}
+
+if (!requireNamespace("stringr", quietly = TRUE)) {
+  install.packages("stringr")
+}
+
 library(httr2)
 library(jsonlite)
 library(dplyr)

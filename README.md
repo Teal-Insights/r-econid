@@ -1,5 +1,5 @@
 
-<a href="https://teal-insights.github.io/r-econid"><img src="man/figures/logo.png" align="right" height="40" alt="r-econid website" /></a>
+<a href="https://teal-insights.github.io/r-econid/"><img src="man/figures/logo.png" align="right" height="40" alt="r-econid website" /></a>
 
 # econid
 
@@ -18,11 +18,11 @@ coverage](https://codecov.io/gh/Teal-Insights/r-econid/graph/badge.svg)](https:/
 ## Overview
 
 The `econid` R package is a foundational building block of the
-[econdataverse](https://econdataverse.org) family of packages aimed at
-helping economists and financial professionals work with sovereign-level
-economic data. The package is aimed at domain experts in economics and
-finance who need to analyze and join data across multiple sources, but
-who aren’t necessarily R programming experts.
+[econdataverse](https://www.econdataverse.org/) family of packages aimed
+at helping economists and financial professionals work with
+sovereign-level economic data. The package is aimed at domain experts in
+economics and finance who need to analyze and join data across multiple
+sources, but who aren’t necessarily R programming experts.
 
 ## Motivation
 
@@ -68,12 +68,12 @@ Researchers often need to:
 
 ## Design Philosophy
 
-The design philosophy of the package follows [tidyverse
-principles](https://www.tidyverse.org/principles/) and the [tidy tools
-manifesto](https://www.tidyverse.org/manifesto/). We strive to practice
-human-centered design, with clear documentation and examples and
-graceful handling of edge cases. We invite you to submit suggestions for
-improvements and extensions on the package’s [Github
+The design philosophy of the package follows [tidyverse design
+principles](https://design.tidyverse.org/) and the [tidy tools
+manifesto](https://tidyverse.tidyverse.org/articles/manifesto.html). We
+strive to practice human-centered design, with clear documentation and
+examples and graceful handling of edge cases. We invite you to submit
+suggestions for improvements and extensions on the package’s [Github
 Issues](https://github.com/Teal-Insights/r-econid/issues) page.
 
 We have designed the package to handle only the most common entities
@@ -84,8 +84,15 @@ flexibly accommodate any unconventional use case.
 
 ## Installation
 
-Until the package is published on CRAN, you can install it from GitHub
-using the `remotes` package.
+To install the package from CRAN, you can use the `install.packages()`
+function:
+
+``` r
+install.packages("econid")
+```
+
+To install a development version from GitHub, you can use the `remotes`
+package:
 
 ``` r
 remotes::install_github("Teal-Insights/r-econid")
