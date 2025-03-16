@@ -6,10 +6,10 @@
 #' @return Invisibly returns NULL.
 #'
 #' @examples
-#' \dontrun{
-#'   add_entity_pattern("EU", "European Union", "economy")
-#'   reset_custom_entity_patterns()  # Clears the custom pattern
-#' }
+#' add_entity_pattern("EU", "European Union", "economy")
+#' reset_custom_entity_patterns()
+#' patterns <- list_entity_patterns()
+#' print(patterns[patterns$entity_id == "EU", ])
 #'
 #' @export
 reset_custom_entity_patterns <- function() {

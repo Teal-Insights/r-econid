@@ -2,7 +2,12 @@ Package: econid
 Title: Economic Entity Identifier Standardization
 Version: 0.0.1
 Authors@R: 
-    c(person("Teal Insights", email = "lte@tealinsights.com", role = c("aut", "cre", "cph")))
+    c(
+        person("L. Teal Emery", email = "lte@tealinsights.com", role = c("cre")),
+        person("Christopher C. Smith", email = "christopher.smith@promptlytechnologies.com", role = c("aut")),
+        person("Christoph Scheuch", email = "christoph@tidy-intelligence.com", role = c("ctb")),
+        person("Teal Insights", email = "lte@tealinsights.com", role = c("cph"))
+    )
 Description: Provides utility functions for standardizing economic entity (economy, aggregate, institution, etc.) name and id in economic datasets such as those published by the International Monetary Fund and World Bank. Aims to facilitate consistent data analysis, reporting, and joining across datasets. Used as a foundational building block in the 'econdataverse' family of packages (<https://www.econdataverse.org>).
 License: MIT + file LICENSE
 Encoding: UTF-8
