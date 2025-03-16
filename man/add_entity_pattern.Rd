@@ -50,14 +50,14 @@ the default patterns when retrieving the entity_patterns via
 for the length of the R session.
 }
 \examples{
-\dontrun{
-  add_entity_pattern(
-    "EU",
-    "European Union",
-    "economy",
-    aliases = c("Europe")
-  )
-  patterns <- list_entity_patterns()
-}
+add_entity_pattern(
+  "ASN",
+  "Association of Southeast Asian Nations",
+  "economy",
+  aliases = c("ASEAN")
+)
+patterns <- list_entity_patterns()
+print(patterns[patterns$entity_id == "ASN", ])
+
 
 }
