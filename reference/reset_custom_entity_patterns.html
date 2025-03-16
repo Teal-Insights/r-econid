@@ -51,10 +51,13 @@ during the current R session.</p>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
-<span class="r-in"><span>  <span class="fu"><a href="add_entity_pattern.html">add_entity_pattern</a></span><span class="op">(</span><span class="st">"EU"</span>, <span class="st">"European Union"</span>, <span class="st">"economy"</span><span class="op">)</span></span></span>
-<span class="r-in"><span>  <span class="fu">reset_custom_entity_patterns</span><span class="op">(</span><span class="op">)</span>  <span class="co"># Clears the custom pattern</span></span></span>
-<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu"><a href="add_entity_pattern.html">add_entity_pattern</a></span><span class="op">(</span><span class="st">"EU"</span>, <span class="st">"European Union"</span>, <span class="st">"economy"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">reset_custom_entity_patterns</span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">patterns</span> <span class="op">&lt;-</span> <span class="fu"><a href="list_entity_patterns.html">list_entity_patterns</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">patterns</span><span class="op">[</span><span class="va">patterns</span><span class="op">$</span><span class="va">entity_id</span> <span class="op">==</span> <span class="st">"EU"</span>, <span class="op">]</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 0 × 6</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 6 variables: entity_id &lt;chr&gt;, entity_name &lt;chr&gt;, iso3c &lt;chr&gt;, iso2c &lt;chr&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   entity_type &lt;chr&gt;, entity_regex &lt;chr&gt;</span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>
@@ -63,7 +66,7 @@ during the current R session.</p>
 
 
     <footer><div class="pkgdown-footer-left">
-  <p>Developed by Teal Insights.</p>
+  <p>Developed by L. Teal Emery, Christopher C. Smith.</p>
 </div>
 
 <div class="pkgdown-footer-right">
