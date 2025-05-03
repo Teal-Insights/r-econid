@@ -21,7 +21,7 @@
 #' @export
 list_entity_patterns <- function() {
   # Get built-in patterns
-  builtin <- entity_patterns
+  builtin <- get("entity_patterns", envir = asNamespace("econid"))
 
   # Get custom patterns from options
   custom <- getOption("econid.custom_entity_patterns")
