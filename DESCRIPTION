@@ -17,13 +17,12 @@ Imports:
     cli,
     dplyr,
     purrr,
-    fuzzyjoin,
     rlang,
+    stringr,
     tibble,
     tidyr
 Suggests:
     testthat (>= 3.0.0),
-    stringr,
     withr
 Config/testthat/edition: 3
 URL: https://teal-insights.github.io/r-econid/, https://github.com/Teal-Insights/r-econid
