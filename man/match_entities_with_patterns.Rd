@@ -2,7 +2,7 @@
 % Please edit documentation in R/standardize_entity.R
 \name{match_entities_with_patterns}
 \alias{match_entities_with_patterns}
-\title{Match entities with patterns using fuzzyjoin}
+\title{Match entities with patterns using regex matching}
 \usage{
 match_entities_with_patterns(
   data,

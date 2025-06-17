@@ -1,6 +1,6 @@
 Package: econid
 Title: Economic Entity Identifier Standardization
-Version: 0.0.1.9001
+Version: 0.0.1.9002
 Authors@R: 
     c(
         person("L. Teal Emery", email = "lte@tealinsights.com", role = c("cre")),
@@ -17,13 +17,12 @@ Imports:
     cli,
     dplyr,
     purrr,
-    fuzzyjoin,
     rlang,
+    stringr,
     tibble,
     tidyr
 Suggests:
     testthat (>= 3.0.0),
-    stringr,
     withr
 Config/testthat/edition: 3
 URL: https://teal-insights.github.io/r-econid/, https://github.com/Teal-Insights/r-econid

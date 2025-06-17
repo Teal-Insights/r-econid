@@ -328,7 +328,7 @@ validate_entity_inputs <- function(
   invisible(NULL)
 }
 
-#' Match entities with patterns using fuzzyjoin
+#' Match entities with patterns using regex matching
 #'
 #' @description
 #' Given a data frame and a vector of target columns, perform regex matching
@@ -392,7 +392,7 @@ match_entities_with_patterns <- function(
     }
 
     # Perform regex join on the current column for unmatched rows
-    matched_pass <- fuzzyjoin::regex_inner_join(
+    matched_pass <- regex_inner_join(
       unmatched_entities,
       patterns,
       by = stats::setNames(entity_regex_col, col),
