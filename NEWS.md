@@ -1,3 +1,5 @@
+# econid (development version)
+
 # econid 0.0.2
 
 * Allowed explicitly accessing exported `entity_patterns` (to support the `econtools` package)
