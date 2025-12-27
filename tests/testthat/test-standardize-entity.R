@@ -1228,3 +1228,42 @@ test_that("prefix validation works correctly", {
     )
   )
 })
+
+test_that("entity_id as target column gets replaced with standardized values", {
+  df <- data.frame(
+    entity_name = c("United States", "China", "NotACountry"),
+    entity_id = c("USA", "CHN", "ZZZ"),
+    obs_value = c(1, 2, 3)
+  )
+
+  result <- standardize_entity(
+    data = df,
+    entity_id,
+    entity_name,
+    warn_overwrite = FALSE
+  )
+
+  # Check structure
+  expect_true(all(
+    c("entity_id", "entity_name", "entity_type", "obs_value") %in% names(result)
+  ))
+
+  # Should have correct number of rows (no duplication)
+  expect_equal(nrow(result), 3)
+
+  # USA and CHN should match and get standardized values
+
+  expect_equal(result$entity_id[1], "USA")
+  expect_equal(result$entity_id[2], "CHN")
+
+  # ZZZ should not match, so entity_id should be NA
+  expect_true(is.na(result$entity_id[3]))
+
+  # entity_name should be populated for matched rows
+  expect_equal(result$entity_name[1], "United States")
+  expect_equal(result$entity_name[2], "China")
+  expect_true(is.na(result$entity_name[3]))
+
+  # Original obs_value should be preserved
+  expect_equal(result$obs_value, c(1, 2, 3))
+})
