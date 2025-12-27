@@ -1,6 +1,6 @@
 Package: econid
 Title: Economic Entity Identifier Standardization
-Version: 0.0.2.9000
+Version: 0.0.2.9001
 Authors@R: 
     c(
         person("L. Teal Emery", email = "lte@tealinsights.com", role = c("cre")),
