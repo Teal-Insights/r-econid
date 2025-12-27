@@ -125,18 +125,47 @@ standardize_entity <- function(
 
   # Check for existing entity columns
   existing_cols <- intersect(names(data), prefixed_output_cols)
+
+  # Identify target columns that would be overwritten
+  target_cols_to_overwrite <- intersect(target_cols_names, existing_cols)
+
   if (length(existing_cols) > 0) {
     # Ignore warn_overwrite if overwrite is FALSE
     if (overwrite && warn_overwrite) {
-      cli::cli_warn(
-        "Overwriting existing entity columns: {.val {existing_cols}}"
-      )
+      # Only warn about columns that aren't being used as targets
+      non_target_existing <- setdiff(existing_cols, target_cols_names)
+      if (length(non_target_existing) > 0) {
+        cli::cli_warn(
+          "Overwriting existing entity columns: {.val {non_target_existing}}"
+        )
+      }
+      # Warn differently about target columns that share output names
+      if (length(target_cols_to_overwrite) > 0) {
+        cli::cli_warn(
+          paste(
+            "Target column(s) {.val {target_cols_to_overwrite}} share name(s)",
+            "with output columns; original values will be used for matching",
+            "then overwritten with standardized values."
+          )
+        )
+      }
     }
   }
+
+  # Save target column data before removing any columns
+  # (in case target columns share names with output columns)
+  target_data <- data[, target_cols_names, drop = FALSE]
 
   # Remove existing entity columns if overwrite is TRUE
   if (overwrite && length(existing_cols) > 0) {
     data <- data[, setdiff(names(data), existing_cols), drop = FALSE]
+  }
+
+  # Restore target columns from saved data
+  for (col in target_cols_names) {
+    if (!col %in% names(data)) {
+      data[[col]] <- target_data[[col]]
+    }
   }
 
   # Convert all target columns to character UTF-8
@@ -144,11 +173,11 @@ standardize_entity <- function(
     data[[col]] <- enc2utf8(as.character(data[[col]]))
   }
 
-  # Rename entity_patterns column names by adding prefix if provided
+  # Get entity patterns (without prefix - we'll rename after matching)
   entity_patterns <- list_entity_patterns()
-  if (!is.null(prefix)) {
-    names(entity_patterns) <- paste(prefix, names(entity_patterns), sep = "_")
-  }
+
+  # Store original pattern column names for reference
+  original_pattern_cols <- names(entity_patterns)
 
   # Use regex match to map entities to patterns
   entity_mapping <- match_entities_with_patterns(
@@ -158,19 +187,85 @@ standardize_entity <- function(
     warn_ambiguous = warn_ambiguous
   )
 
-  # Select only the prefixed output columns and original data columns
-  entity_mapping <- entity_mapping |>
-    dplyr::select(
-      dplyr::all_of(prefixed_output_cols),
-      dplyr::all_of(target_cols_names)
+  # Now apply prefix to the pattern columns in the result if needed
+  if (!is.null(prefix)) {
+    # Create a named vector for renaming: new_name = old_name
+    rename_vec <- stats::setNames(
+      original_pattern_cols,
+      paste(prefix, original_pattern_cols, sep = "_")
+    )
+    entity_mapping <- entity_mapping |>
+      dplyr::rename(dplyr::all_of(rename_vec))
+  }
+
+  # Handle the case where target columns overlap with output columns
+  # match_entities_with_patterns preserves temp names (..target..<col>) for
+  # conflicting columns, so entity_mapping has:
+  # - pattern columns with standardized values (e.g., entity_id)
+  # - temp-named target columns with original values (e.g., ..target..entity_id)
+  overlapping_cols <- intersect(target_cols_names, prefixed_output_cols)
+
+  if (length(overlapping_cols) > 0) {
+    # The temp names used by match_entities_with_patterns
+    temp_target_names <- paste0("..target..", overlapping_cols)
+    names(temp_target_names) <- overlapping_cols
+
+    # Build the select columns for entity_mapping:
+    # - Use prefixed_output_cols for standardized values
+    # - Use temp names for target columns that overlap with output cols
+    # - Use original names for target columns that don't overlap
+    select_target_cols <- target_cols_names
+    for (col in overlapping_cols) {
+      select_target_cols[select_target_cols == col] <- temp_target_names[col]
+    }
+
+    # Select output columns and target columns with temp names where applicable
+    entity_mapping <- entity_mapping |>
+      dplyr::select(
+        dplyr::all_of(prefixed_output_cols),
+        dplyr::any_of(select_target_cols)
+      )
+
+    # Rename target columns in data to match the temp names for joining
+    for (col in overlapping_cols) {
+      names(data)[names(data) == col] <- temp_target_names[col]
+    }
+
+    # Build the join columns using temp names for overlapping columns
+    join_cols <- target_cols_names
+    for (col in overlapping_cols) {
+      join_cols[join_cols == col] <- temp_target_names[col]
+    }
+
+    # Join entity_mapping to the input data
+    results <- dplyr::left_join(
+      data,
+      entity_mapping,
+      by = join_cols
     )
 
-  # Join entity_mapping to the input data
-  results <- dplyr::left_join(
-    data,
-    entity_mapping,
-    by = target_cols_names
-  )
+    # Remove the temporary target columns, we now have the standardized versions
+    temp_cols_present <- intersect(temp_target_names, names(results))
+    if (length(temp_cols_present) > 0) {
+      results <- results |>
+        dplyr::select(-dplyr::all_of(temp_cols_present))
+    }
+  } else {
+    # No overlap - simple case
+    # Select only the prefixed output columns and original data columns
+    entity_mapping <- entity_mapping |>
+      dplyr::select(
+        dplyr::all_of(prefixed_output_cols),
+        dplyr::all_of(target_cols_names)
+      )
+
+    # Join entity_mapping to the input data
+    results <- dplyr::left_join(
+      data,
+      entity_mapping,
+      by = target_cols_names
+    )
+  }
 
   # Apply fill_mapping for rows with no matches
   if (!is.null(fill_mapping)) {
@@ -339,6 +434,35 @@ validate_entity_inputs <- function(
   invisible(NULL)
 }
 
+#' Safe regex inner join that handles duplicate column names
+#'
+#' @description
+#' Wrapper around regex_inner_join that ensures no duplicate column names
+#' in the result by keeping only the first occurrence of each column name.
+#'
+#' @param x First data frame
+#' @param y Second data frame
+#' @param by Named character vector for join columns
+#' @param ignore_case Logical; whether to ignore case in regex matching
+#'
+#' @return A data frame with unique column names
+#'
+#' @keywords internal
+safe_regex_inner_join <- function(x, y, by, ignore_case = TRUE) {
+  # Perform the join
+  result <- regex_inner_join(x, y, by = by, ignore_case = ignore_case)
+
+  # Handle duplicate column names by keeping only the first occurrence
+  col_names <- names(result)
+  if (anyDuplicated(col_names)) {
+    # For each duplicate, keep only the first column
+    cols_to_keep <- !duplicated(col_names)
+    result <- result[, cols_to_keep, drop = FALSE]
+  }
+
+  result
+}
+
 #' Match entities with patterns using regex matching
 #'
 #' @description
@@ -367,9 +491,12 @@ match_entities_with_patterns <- function(
   .data <- dplyr::.data
 
   # Get the column names for entity_regex and entity_id in the patterns data
-  # frame
+  # frame. These are the ORIGINAL names (not prefixed).
   entity_regex_col <- names(patterns)[6]
   entity_id_col <- names(patterns)[1]
+
+  # Store original pattern column names
+  pattern_col_names <- names(patterns)
 
   # If data frame is empty, return empty result with correct structure
   if (nrow(data) == 0) {
@@ -380,32 +507,57 @@ match_entities_with_patterns <- function(
     )
   }
 
+  # Detect conflicting column names between target_cols and pattern columns
+  conflicting_cols <- intersect(target_cols, pattern_col_names)
+
+  # Create a mapping from original target names to temporary names
+  # Only rename columns that conflict with pattern column names
+  temp_name_map <- stats::setNames(target_cols, target_cols)
+  if (length(conflicting_cols) > 0) {
+    for (col in conflicting_cols) {
+      temp_name_map[[col]] <- paste0("..target..", col)
+    }
+  }
+
+  # Rename conflicting columns in data before processing
+  data_renamed <- data
+  for (orig_name in names(temp_name_map)) {
+    new_name <- temp_name_map[[orig_name]]
+    if (orig_name != new_name && orig_name %in% names(data_renamed)) {
+      names(data_renamed)[names(data_renamed) == orig_name] <- new_name
+    }
+  }
+
+  # Get the temporary target column names
+  target_cols_temp <- unname(temp_name_map)
+
   # Initialize a tibble to hold unmatched unique combinations of target columns
-  unmatched_entities <- data |>
-    dplyr::distinct(dplyr::across(dplyr::all_of(target_cols))) |>
-    dplyr::select(dplyr::all_of(target_cols)) |>
+  unmatched_entities <- data_renamed |>
+    dplyr::distinct(dplyr::across(dplyr::all_of(target_cols_temp))) |>
+    dplyr::select(dplyr::all_of(target_cols_temp)) |>
     dplyr::mutate(.row_id = seq_len(dplyr::n()))
 
-  # Initialize a tibble to hold the matched entities with corresponding
-  # entity_patterns columns
-  col_names <- c(names(patterns), target_cols)
+  # Initialize a tibble to hold the matched entities
+  # Use pattern columns + temp target columns + .row_id
+  all_col_names <- c(pattern_col_names, target_cols_temp)
   matched_entities <- tibble::tibble(
     !!!stats::setNames(
-      purrr::map(col_names, ~ c()),
-      col_names
+      purrr::map(all_col_names, ~ character(0)),
+      all_col_names
     ),
     .row_id = integer()
   )
 
   # Perform multiple passes of fuzzy matching, one for each target column
-  for (col in target_cols) {
+  for (col in target_cols_temp) {
     # Skip if the column has all NA values
     if (all(is.na(unmatched_entities[[col]]))) {
       next
     }
 
     # Perform regex join on the current column for unmatched rows
-    matched_pass <- regex_inner_join(
+    # Use safe_regex_inner_join to handle potential duplicate column names
+    matched_pass <- safe_regex_inner_join(
       unmatched_entities,
       patterns,
       by = stats::setNames(entity_regex_col, col),
@@ -420,7 +572,7 @@ match_entities_with_patterns <- function(
     matched_entities <- dplyr::bind_rows(
       matched_entities,
       matched_pass |>
-        dplyr::filter(!is.na(!!rlang::sym(entity_id_col)))
+        dplyr::filter(!is.na(.data[[entity_id_col]]))
     )
 
     # Break if all unmatched entities are matched
@@ -436,17 +588,38 @@ match_entities_with_patterns <- function(
   ) |>
     dplyr::select(-".row_id")
 
+  # Rename temporary target columns back to original names ONLY if they don't
+  # conflict with pattern column names. If there's a conflict, keep the temp
+  # name so we preserve both the standardized value and the original target
+  # value.
+  for (orig_name in names(temp_name_map)) {
+    temp_name <- temp_name_map[[orig_name]]
+    if (orig_name != temp_name && temp_name %in% names(result)) {
+      # Only rename back if orig_name is NOT a pattern column name
+      if (!orig_name %in% pattern_col_names) {
+        names(result)[names(result) == temp_name] <- orig_name
+      }
+      # If orig_name IS a pattern column, keep the temp name to preserve both
+    }
+  }
+
   # If no patterns columns exist in the result (which happens when all values
   # in data are NA or no matches are found), add these columns with NA values
-  missing_cols <- setdiff(names(patterns), names(result))
+  missing_cols <- setdiff(pattern_col_names, names(result))
   if (length(missing_cols) > 0) {
     na_patterns <- tibble::tibble(
       !!!stats::setNames(
-        purrr::map(missing_cols, ~ rep(NA, nrow(result))),
+        purrr::map(missing_cols, ~ rep(NA_character_, nrow(result))),
         missing_cols
       )
     )
     result <- dplyr::bind_cols(result, na_patterns)
+  }
+
+  # Only deduplicate if there are truly duplicate columns that we don't need
+  # (this shouldn't happen anymore with the fix above)
+  if (anyDuplicated(names(result))) {
+    result <- result[, !duplicated(names(result)), drop = FALSE]
   }
 
   # Check for ambiguous matches (multiple matches for the same entity_id) and
@@ -454,10 +627,10 @@ match_entities_with_patterns <- function(
   if (warn_ambiguous) {
     # Get groups of target values with multiple entity ID matches
     ambiguous_targets <- result |>
-      dplyr::group_by(!!rlang::sym(target_cols[1])) |>
-      dplyr::filter(!is.na(!!rlang::sym(entity_id_col))) |>
+      dplyr::group_by(.data[[target_cols[1]]]) |>
+      dplyr::filter(!is.na(.data[[entity_id_col]])) |>
       dplyr::summarize(
-        entity_ids = list(unique(!!rlang::sym(entity_id_col))),
+        entity_ids = list(unique(.data[[entity_id_col]])),
         count = dplyr::n()
       ) |>
       dplyr::filter(.data$count > 1)
