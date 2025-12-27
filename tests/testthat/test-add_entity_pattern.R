@@ -124,7 +124,7 @@ test_that("multiple invocations are cumulative and in order", {
 test_that("internal environment and table are created if missing", {
   local_clean_econid_patterns()
 
-  entity_id   <- 4
+  entity_id <- 4
   entity_name <- "Newland"
   entity_type <- "economy"
 
@@ -144,8 +144,12 @@ test_that("internal environment and table are created if missing", {
   # Check that the option was properly populated
   cp <- getOption("econid.custom_entity_patterns")
   expected_cols <- c(
-    "entity_id", "entity_name", "iso3c",
-    "iso2c", "entity_type", "entity_regex"
+    "entity_id",
+    "entity_name",
+    "iso3c",
+    "iso2c",
+    "entity_type",
+    "entity_regex"
   )
   expect_equal(names(cp), expected_cols)
 })
@@ -199,7 +203,7 @@ test_that("validates entity_type against allowed values", {
     # iteration
     expect_no_error(
       add_entity_pattern(
-        entity_id = paste0("7", i),  # Use unique IDs: "71", "72", "73", "74"
+        entity_id = paste0("7", i), # Use unique IDs: "71", "72", "73", "74"
         entity_name = paste0("ValidLand", i),
         entity_type = valid_type,
         aliases = NULL,

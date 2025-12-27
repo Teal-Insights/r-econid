@@ -35,8 +35,12 @@ test_that("list_entity_patterns combines built-in and custom patterns", {
   expect_equal(
     names(new_custom),
     c(
-      "entity_id", "entity_name", "iso3c",
-      "iso2c", "entity_type", "entity_regex"
+      "entity_id",
+      "entity_name",
+      "iso3c",
+      "iso2c",
+      "entity_type",
+      "entity_regex"
     )
   )
 
