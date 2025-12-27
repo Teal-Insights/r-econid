@@ -1,6 +1,10 @@
 # Define valid output columns
 valid_cols <- c(
-  "entity_id", "entity_name", "entity_type", "iso3c", "iso2c"
+  "entity_id",
+  "entity_name",
+  "entity_type",
+  "iso3c",
+  "iso2c"
 )
 
 #' Standardize Entity Identifiers
@@ -209,7 +213,8 @@ standardize_entity <- function(
         # Fill NA values in the output column with values from the input column
         # but only for rows with no matches
         results[no_match_mask, prefixed_output] <- results[
-          no_match_mask, input_col
+          no_match_mask,
+          input_col
         ]
       }
     }
@@ -222,7 +227,8 @@ standardize_entity <- function(
     # Make sure we're working with the correct column name
     if (prefixed_entity_type %in% names(results)) {
       results[[prefixed_entity_type]] <- tidyr::replace_na(
-        results[[prefixed_entity_type]], default_entity_type
+        results[[prefixed_entity_type]],
+        default_entity_type
       )
     }
   }
@@ -231,12 +237,14 @@ standardize_entity <- function(
   if (!rlang::quo_is_null(rlang::enquo(.before))) {
     results <- results |>
       dplyr::relocate(
-        dplyr::any_of(prefixed_output_cols), .before = {{ .before }}
+        dplyr::any_of(prefixed_output_cols),
+        .before = {{ .before }}
       )
   } else {
     results <- results |>
       dplyr::relocate(
-        dplyr::any_of(prefixed_output_cols), .before = 1
+        dplyr::any_of(prefixed_output_cols),
+        .before = 1
       )
   }
 
@@ -300,8 +308,11 @@ validate_entity_inputs <- function(
   # Validate fill_mapping if provided
   if (!is.null(fill_mapping)) {
     # Check it's a named character vector
-    if (!is.character(fill_mapping) || is.null(names(fill_mapping)) ||
-          any(names(fill_mapping) == "")) {
+    if (
+      !is.character(fill_mapping) ||
+        is.null(names(fill_mapping)) ||
+        any(names(fill_mapping) == "")
+    ) {
       cli::cli_abort("fill_mapping must be a named character vector.")
     }
 
@@ -380,8 +391,10 @@ match_entities_with_patterns <- function(
   col_names <- c(names(patterns), target_cols)
   matched_entities <- tibble::tibble(
     !!!stats::setNames(
-      purrr::map(col_names, ~ c()), col_names
-    ), .row_id = integer()
+      purrr::map(col_names, ~ c()),
+      col_names
+    ),
+    .row_id = integer()
   )
 
   # Perform multiple passes of fuzzy matching, one for each target column
@@ -454,7 +467,8 @@ match_entities_with_patterns <- function(
       for (i in seq_len(nrow(ambiguous_targets))) {
         original_value <- ambiguous_targets[[target_cols[1]]][i]
         matching_ids <- paste(
-          ambiguous_targets$entity_ids[[i]], collapse = ", "
+          ambiguous_targets$entity_ids[[i]],
+          collapse = ", "
         )
         cli::cli_warn(c(
           "!" = paste("Ambiguous match for", original_value),

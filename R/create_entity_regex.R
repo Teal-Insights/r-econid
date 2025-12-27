@@ -19,18 +19,22 @@ create_entity_regex <- function(names) {
   }
 
   # Process each name individually
-  patterns <- vapply(names, function(name) {
-    # Convert to lowercase
-    pattern <- tolower(name)
+  patterns <- vapply(
+    names,
+    function(name) {
+      # Convert to lowercase
+      pattern <- tolower(name)
 
-    # Escape special regex characters
-    pattern <- gsub("([.|()\\^{}+$*?])", "\\\\\\1", pattern)
+      # Escape special regex characters
+      pattern <- gsub("([.|()\\^{}+$*?])", "\\\\\\1", pattern)
 
-    # Replace spaces with flexible whitespace pattern
-    pattern <- gsub("\\s+", ".?", pattern)
+      # Replace spaces with flexible whitespace pattern
+      pattern <- gsub("\\s+", ".?", pattern)
 
-    pattern
-  }, FUN.VALUE = character(1))
+      pattern
+    },
+    FUN.VALUE = character(1)
+  )
 
   # Join individual patterns with pipe to create an "or" regex pattern
   combined_pattern <- paste(patterns, collapse = "|")
