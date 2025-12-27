@@ -1,17 +1,21 @@
 test_that("basic country standardization works", {
+  # nolint start
   test_df <- tibble::tribble(
-    ~entity,         ~code,
-    NA,               "USA",
-    "united.states",  NA,
-    "us",             "US"
+    ~entity         , ~code ,
+    NA              , "USA" ,
+    "united.states" , NA    ,
+    "us"            , "US"
   )
+  # nolint end
 
   result <- standardize_entity(test_df, entity, code)
 
   expect_equal(
     result$entity_name,
     c(
-      "United States", "United States", "United States"
+      "United States",
+      "United States",
+      "United States"
     )
   )
   expect_equal(
@@ -21,18 +25,21 @@ test_that("basic country standardization works", {
 })
 
 test_that("unmatched entities are not filled from existing cols by default", {
+  # nolint start
   test_df <- tibble::tribble(
-    ~entity,         ~code,
-    "EU",             NA,
-    "NotACountry",    NA
+    ~entity       , ~code ,
+    "EU"          , NA    ,
+    "NotACountry" , NA
   )
+  # nolint end
 
   result <- standardize_entity(test_df, entity, code)
 
   expect_equal(
     result$entity_name,
     c(
-      NA_character_, NA_character_
+      NA_character_,
+      NA_character_
     )
   )
   expect_equal(
@@ -45,11 +52,13 @@ test_that("unmatched entities are not filled from existing cols by default", {
 # mapping is provided
 
 test_that("column order prioritizes matches from earlier columns", {
+  # nolint start
   test_df <- tibble::tribble(
-    ~name,           ~code,
-    "United States", "FRA",
-    "France",        NA
+    ~name           , ~code ,
+    "United States" , "FRA" ,
+    "France"        , NA
   )
+  # nolint end
 
   # Should prefer first column match
   result <- standardize_entity(test_df, code, name)
@@ -61,12 +70,14 @@ test_that("column order prioritizes matches from earlier columns", {
 })
 
 test_that("standardization works with a single target column", {
+  # nolint start
   test_df <- tibble::tribble(
-    ~country,
-    "United States",
-    "France",
+    ~country        ,
+    "United States" ,
+    "France"        ,
     "NotACountry"
   )
+  # nolint end
 
   result <- standardize_entity(test_df, country)
 
@@ -75,10 +86,12 @@ test_that("standardization works with a single target column", {
 })
 
 test_that("standardization fails with invalid output columns", {
+  # nolint start
   test_df <- tibble::tribble(
-    ~country,
+    ~country        ,
     "United States"
   )
+  # nolint end
 
   # Test single invalid column
   expect_error(
@@ -103,14 +116,16 @@ test_that("standardization fails with invalid output columns", {
 
 test_that("match_entities_with_patterns performs case-insensitive matching", {
   # Create a test dataframe with different case variations
+  # nolint start
   test_df <- tibble::tribble(
-    ~country,
-    "FRANCE",
-    "france",
-    "FrAnCe",
-    "fra",
+    ~country ,
+    "FRANCE" ,
+    "france" ,
+    "FrAnCe" ,
+    "fra"    ,
     "FRA"
   )
+  # nolint end
 
   # Test the function directly - expect a data frame result with mapped entity
   # columns
@@ -129,19 +144,21 @@ test_that("match_entities_with_patterns performs case-insensitive matching", {
       c("country", "entity_id", "entity_name", "entity_type") %in% names(result)
     )
   )
-  expect_equal(nrow(result), 5)  # One row for each unique input
+  expect_equal(nrow(result), 5) # One row for each unique input
   expect_equal(result$entity_id, rep("FRA", 5))
   expect_equal(result$entity_name, rep("France", 5))
   expect_equal(result$entity_type, rep("economy", 5))
 })
 
 test_that("match_entities_with_patterns handles multiple target columns", {
+  # nolint start
   test_df <- tibble::tribble(
-    ~name,           ~code,    ~abbr,
-    "United States", NA,       "US",
-    NA,              "FRA",    NA,
-    "Unknown",       "Unknown", "UNK"
+    ~name           , ~code     , ~abbr ,
+    "United States" , NA        , "US"  ,
+    NA              , "FRA"     , NA    ,
+    "Unknown"       , "Unknown" , "UNK"
   )
+  # nolint end
 
   # Should try each column in sequence and return a data frame
   result <- match_entities_with_patterns(
@@ -180,12 +197,14 @@ test_that("match_entities_with_patterns handles multiple target columns", {
 })
 
 test_that("match_entities_with_patterns handles output_cols parameter", {
+  # nolint start
   test_df <- tibble::tribble(
-    ~country,
-    "United States",
-    "France",
+    ~country        ,
+    "United States" ,
+    "France"        ,
     "Germany"
   )
+  # nolint end
 
   # Test with different combinations of output_cols
   # Note: We're testing if the right columns come through, not the parameter
@@ -201,8 +220,14 @@ test_that("match_entities_with_patterns handles output_cols parameter", {
   expect_true(
     all(
       c(
-        "country", "entity_id", "entity_name", "entity_type", "iso3c", "iso2c"
-      ) %in% names(result_all)
+        "country",
+        "entity_id",
+        "entity_name",
+        "entity_type",
+        "iso3c",
+        "iso2c"
+      ) %in%
+        names(result_all)
     )
   )
 
@@ -259,7 +284,7 @@ test_that("match_entities_with_patterns handles ambiguous matches", {
 
   # Should return a data frame with both matches for ambiguous entries
   expect_s3_class(result, "data.frame")
-  expect_equal(nrow(result), 2)  # Now expect 2 rows instead of 1
+  expect_equal(nrow(result), 2) # Now expect 2 rows instead of 1
 
   # Check that both matches are present
   expect_true(all(c("USA", "USB") %in% result$entity_id))
@@ -273,13 +298,19 @@ test_that("match_entities_with_patterns handles ambiguous matches", {
 
 test_that("output_cols argument correctly filters columns", {
   valid_cols <- c(
-    "entity_name", "entity_type", "entity_id", "iso3c", "iso2c"
+    "entity_name",
+    "entity_type",
+    "entity_id",
+    "iso3c",
+    "iso2c"
   )
+  # nolint start
   test_df <- tibble::tribble(
-    ~entity,         ~code,
-    "United States",  "USA",
-    "France",         "FRA"
+    ~entity         , ~code ,
+    "United States" , "USA" ,
+    "France"        , "FRA"
   )
+  # nolint end
 
   # Test subset of valid columns
   result <- standardize_entity(
@@ -295,9 +326,15 @@ test_that("output_cols argument correctly filters columns", {
   )
   # Verify excluded valid columns and regex column
   expect_false(
-    any(c(
-      "entity_name", "entity_type", "iso2c", "entity_regex"
-    ) %in% names(result))
+    any(
+      c(
+        "entity_name",
+        "entity_type",
+        "iso2c",
+        "entity_regex"
+      ) %in%
+        names(result)
+    )
   )
 
   # Test all valid columns
@@ -315,11 +352,13 @@ test_that("output_cols argument correctly filters columns", {
 })
 
 test_that("output columns are added in correct order", {
+  # nolint start
   test_df <- tibble::tribble(
-    ~country,
-    "United States",
+    ~country        ,
+    "United States" ,
     "France"
   )
+  # nolint end
 
   # Test with specific output columns
   result <- standardize_entity(
@@ -399,11 +438,13 @@ test_that("handles existing entity columns correctly", {
 })
 
 test_that("prefix parameter works correctly", {
+  # nolint start
   test_df <- tibble::tribble(
-    ~country_name, ~counterpart_name,
-    "USA",         "France",
-    "Germany",     "Italy"
+    ~country_name , ~counterpart_name ,
+    "USA"         , "France"          ,
+    "Germany"     , "Italy"
   )
+  # nolint end
 
   # Test with prefix
   result <- test_df |>
@@ -417,11 +458,17 @@ test_that("prefix parameter works correctly", {
     )
 
   # Check that prefixed columns exist
-  expect_true(all(c(
-    "country_entity_id", "country_entity_name", "country_entity_type",
-    "counterpart_entity_id", "counterpart_entity_name",
-    "counterpart_entity_type"
-  ) %in% names(result)))
+  expect_true(all(
+    c(
+      "country_entity_id",
+      "country_entity_name",
+      "country_entity_type",
+      "counterpart_entity_id",
+      "counterpart_entity_name",
+      "counterpart_entity_type"
+    ) %in%
+      names(result)
+  ))
 
   # Check that values are correct
   expect_equal(result$country_entity_id, c("USA", "DEU"))
@@ -429,11 +476,13 @@ test_that("prefix parameter works correctly", {
 })
 
 test_that("default_entity_type parameter works correctly", {
+  # nolint start
   test_df <- tibble::tribble(
-    ~entity,
-    "United States",
+    ~entity         ,
+    "United States" ,
     "NotACountry"
   )
+  # nolint end
 
   # Test with default_entity_type
   result <- standardize_entity(
@@ -476,8 +525,14 @@ test_that("column placement works without .before", {
   # Check that output columns are placed at the left side of the dataframe
   # (default behavior)
   expected_order <- c(
-    "entity_id", "entity_name", "entity_type",
-    "id", "extra1", "name", "code", "extra2"
+    "entity_id",
+    "entity_name",
+    "entity_type",
+    "id",
+    "extra1",
+    "name",
+    "code",
+    "extra2"
   )
   expect_equal(names(result), expected_order)
 })
@@ -500,8 +555,14 @@ test_that(".before parameter works correctly", {
     .before = "id"
   )
   expected_before_id_order <- c(
-    "entity_id", "entity_name", "entity_type",
-    "id", "extra1", "name", "code", "extra2"
+    "entity_id",
+    "entity_name",
+    "entity_type",
+    "id",
+    "extra1",
+    "name",
+    "code",
+    "extra2"
   )
   expect_equal(names(result_before_id), expected_before_id_order)
 
@@ -513,8 +574,13 @@ test_that(".before parameter works correctly", {
     .before = "extra2"
   )
   expected_before_extra2_order <- c(
-    "id", "extra1", "name", "code",
-    "entity_id", "entity_name", "entity_type",
+    "id",
+    "extra1",
+    "name",
+    "code",
+    "entity_id",
+    "entity_name",
+    "entity_type",
     "extra2"
   )
   expect_equal(names(result_before_extra2), expected_before_extra2_order)
@@ -532,16 +598,19 @@ test_that(".before parameter works correctly", {
 })
 
 test_that("fill_mapping parameter works correctly", {
+  # nolint start
   test_df <- tibble::tribble(
-    ~entity,         ~code,
-    "United States",  "USA",  # Should match via patterns
-    "NotACountry",    "ABC"   # No match, should use fill_mapping
+    ~entity         , ~code ,
+    "United States" , "USA" , # Should match via patterns
+    "NotACountry"   , "ABC" # No match, should use fill_mapping
   )
+  # nolint end
 
   # Test with fill_mapping
   result <- standardize_entity(
     test_df,
-    entity, code,
+    entity,
+    code,
     fill_mapping = c(entity_id = "code", entity_name = "entity")
   )
 
@@ -556,7 +625,8 @@ test_that("fill_mapping parameter works correctly", {
   # Test without fill_mapping (should leave NA for unmatched)
   result_no_fill <- standardize_entity(
     test_df,
-    entity, code
+    entity,
+    code
   )
 
   expect_equal(result_no_fill$entity_id[2], NA_character_)
@@ -565,48 +635,55 @@ test_that("fill_mapping parameter works correctly", {
   # Test with partial fill_mapping
   result_partial <- standardize_entity(
     test_df,
-    entity, code,
-    fill_mapping = c(entity_id = "code")  # Only fill entity_id
+    entity,
+    code,
+    fill_mapping = c(entity_id = "code") # Only fill entity_id
   )
 
-  expect_equal(result_partial$entity_id[2], "ABC")  # Should be filled
-  expect_equal(result_partial$entity_name[2], NA_character_)  # Should remain NA
+  expect_equal(result_partial$entity_id[2], "ABC") # Should be filled
+  expect_equal(result_partial$entity_name[2], NA_character_) # Should remain NA
 })
 
 test_that("fill_mapping works with prefix", {
   test_df <- tibble::tribble(
-    ~country_name, ~country_code,
-    "United States", "USA",  # Should match
-    "Unknown",       "XYZ"   # No match
+    # nolint start
+    ~country_name   , ~country_code ,
+    "United States" , "USA"         , # Should match
+    "Unknown"       , "XYZ" # No match
   )
+  # nolint end
 
   # Test with prefix and fill_mapping
   result <- standardize_entity(
     test_df,
-    country_name, country_code,
+    country_name,
+    country_code,
     prefix = "country",
     fill_mapping = c(entity_id = "country_code", entity_name = "country_name")
   )
 
   # Check prefixed column values
-  expect_equal(result$country_entity_id[1], "USA")  # Matched
-  expect_equal(result$country_entity_name[1], "United States")  # Matched
+  expect_equal(result$country_entity_id[1], "USA") # Matched
+  expect_equal(result$country_entity_name[1], "United States") # Matched
 
-  expect_equal(result$country_entity_id[2], "XYZ")  # Filled from mapping
-  expect_equal(result$country_entity_name[2], "Unknown")  # Filled from mapping
+  expect_equal(result$country_entity_id[2], "XYZ") # Filled from mapping
+  expect_equal(result$country_entity_name[2], "Unknown") # Filled from mapping
 })
 
 test_that("fill_mapping validation works", {
+  # nolint start
   test_df <- tibble::tribble(
-    ~entity, ~code,
-    "US",    "USA"
+    ~entity , ~code ,
+    "US"    , "USA"
   )
+  # nolint end
 
   # Invalid output column name
   expect_error(
     standardize_entity(
       test_df,
-      entity, code,
+      entity,
+      code,
       fill_mapping = c(invalid_col = "code")
     ),
     "fill_mapping names.*must be valid output column names"
@@ -616,7 +693,8 @@ test_that("fill_mapping validation works", {
   expect_error(
     standardize_entity(
       test_df,
-      entity, code,
+      entity,
+      code,
       fill_mapping = c(entity_id = "missing_column")
     ),
     "fill_mapping values.*must be columns in the data frame"
@@ -626,7 +704,8 @@ test_that("fill_mapping validation works", {
   expect_error(
     standardize_entity(
       test_df,
-      entity, code,
+      entity,
+      code,
       fill_mapping = c("entity", "code")
     ),
     "fill_mapping must be a named character vector"
@@ -634,16 +713,19 @@ test_that("fill_mapping validation works", {
 })
 
 test_that("fill_mapping handles empty and partial vectors correctly", {
+  # nolint start
   test_df <- tibble::tribble(
-    ~entity,         ~code,
-    "United States",  "USA",  # Should match via patterns
-    "NotACountry",    "ABC"   # No match, should use fill_mapping
+    ~entity         , ~code ,
+    "United States" , "USA" , # Should match via patterns
+    "NotACountry"   , "ABC" # No match, should use fill_mapping
   )
+  # nolint end
 
   # Test with empty fill_mapping vector
   result_empty <- standardize_entity(
     test_df,
-    entity, code,
+    entity,
+    code,
     fill_mapping = c()
   )
 
@@ -654,7 +736,8 @@ test_that("fill_mapping handles empty and partial vectors correctly", {
   # Test with only entity_id in fill_mapping
   result_id_only <- standardize_entity(
     test_df,
-    entity, code,
+    entity,
+    code,
     fill_mapping = c(entity_id = "code")
   )
 
@@ -665,7 +748,8 @@ test_that("fill_mapping handles empty and partial vectors correctly", {
   # Test with only entity_name in fill_mapping
   result_name_only <- standardize_entity(
     test_df,
-    entity, code,
+    entity,
+    code,
     fill_mapping = c(entity_name = "entity")
   )
 
@@ -713,14 +797,16 @@ test_that("match_entities_with_patterns handles empty or all-NA data", {
 
 test_that("match_entities_with_patterns keeps all unique target col combos", {
   # Test with multiple columns where some combinations are duplicated
+  # nolint start
   test_df <- tibble::tribble(
-    ~name,         ~code,  ~year,
-    "France",   "FRA",  2020,
-    "France",   "FRA",  2021,  # Duplicate name-code combination, different year
-    "France",   "FR",   2020,  # Different code
-    "Germany",  "DEU",  2020,
-    "Germany",  "DEU",  2020   # Complete duplicate row
+    ~name     , ~code , ~year ,
+    "France"  , "FRA" ,  2020 ,
+    "France"  , "FRA" ,  2021 , # Duplicate name-code combination, different year
+    "France"  , "FR"  ,  2020 , # Different code
+    "Germany" , "DEU" ,  2020 ,
+    "Germany" , "DEU" ,  2020 # Complete duplicate row
   )
+  # nolint end
 
   result <- match_entities_with_patterns(
     test_df,
@@ -740,15 +826,17 @@ test_that("match_entities_with_patterns keeps all unique target col combos", {
   # Check mappings for each unique combination
   expect_equal(
     dplyr::arrange(result, name, code)$entity_id,
-    c("FRA", "FRA", "DEU")  # Both "France" rows map to FRA, Germany to DEU
+    c("FRA", "FRA", "DEU") # Both "France" rows map to FRA, Germany to DEU
   )
 })
 
 test_that("match_entities_with_patterns fails gracefully with invalid input", {
+  # nolint start
   test_df <- tibble::tribble(
-    ~country,
+    ~country        ,
     "United States"
   )
+  # nolint end
 
   # Test with invalid target column
   expect_error(
@@ -767,12 +855,15 @@ test_that("match_entities_with_patterns handles multiple ambiguous matches", {
   mock_patterns <- tibble::tibble(
     entity_id = c("USA", "USB", "FRA", "FRB"),
     entity_name = c(
-      "United States A", "United States B", "France A", "France B"
+      "United States A",
+      "United States B",
+      "France A",
+      "France B"
     ),
     entity_type = c("economy", "economy", "economy", "economy"),
     iso3c = c("USA", "USB", "FRA", "FRB"),
     iso2c = c("US", "UB", "FR", "FB"),
-    entity_regex = c("^us$", "^us$", "^fr$", "^fr$")  # Ambiguous patterns
+    entity_regex = c("^us$", "^us$", "^fr$", "^fr$") # Ambiguous patterns
   )
 
   # Use local_mocked_bindings to temporarily mock the list_entity_patterns
@@ -786,7 +877,7 @@ test_that("match_entities_with_patterns handles multiple ambiguous matches", {
   # Create a test dataframe with multiple entities that have ambiguous
   # matches
   test_df <- tibble::tibble(
-    country = c("us", "fr", "de")  # "us" and "fr" are ambiguous, "de" not
+    country = c("us", "fr", "de") # "us" and "fr" are ambiguous, "de" not
   )
 
   # Test with warn_ambiguous = TRUE
@@ -834,9 +925,9 @@ test_that("match_entities_with_patterns suppresses warnings per option", {
     entity_id = c("USA", "USB"),
     entity_name = c("United States A", "United States B"),
     entity_type = c("economy", "economy"),
-    iso3c = c("USA", "USB"),        # Add missing columns
-    iso2c = c("US", "UB"),          # Add missing columns
-    entity_regex = c("^us$", "^us$")  # Both patterns match "us"
+    iso3c = c("USA", "USB"), # Add missing columns
+    iso2c = c("US", "UB"), # Add missing columns
+    entity_regex = c("^us$", "^us$") # Both patterns match "us"
   )
 
   # Use local_mocked_bindings to temporarily mock the list_entity_patterns
@@ -880,8 +971,8 @@ test_that("match_entities_with_patterns handles case insensitive matches", {
     entity_id = c("USA"),
     entity_name = c("United States"),
     entity_type = c("economy"),
-    iso3c = c("USA"),               # Add missing columns
-    iso2c = c("US"),                # Add missing columns
+    iso3c = c("USA"), # Add missing columns
+    iso2c = c("US"), # Add missing columns
     entity_regex = c("^united states|usa|us$")
   )
 
@@ -906,14 +997,14 @@ test_that("match_entities_with_patterns handles case insensitive matches", {
         test_df,
         target_cols = "country",
         patterns = mock_patterns,
-        warn_ambiguous = TRUE  # Even with warnings enabled
+        warn_ambiguous = TRUE # Even with warnings enabled
       )
     }
   )
 
   # Should return a data frame with one row for each unique input
   expect_s3_class(result, "data.frame")
-  expect_equal(nrow(result), 4)  # One per case variation
+  expect_equal(nrow(result), 4) # One per case variation
 
   # All should be matched to USA
   expect_equal(unique(result$entity_id), "USA")
@@ -926,13 +1017,15 @@ test_that("match_entities_with_patterns handles case insensitive matches", {
 test_that("match_entities_with_patterns performs multiple passes correctly", {
   # Create a test dataframe with different columns that should be matched
   # sequentially
+  # nolint start
   test_df <- tibble::tribble(
-    ~id, ~name,          ~code,  ~description,
-    1,   NA,             "USA",  "First entry",    # Should match on code
-    2,   "France",       NA,     "Second entry",   # Should match on name
-    3,   NA,             NA,     "United States",  # Should match on description
-    4,   "not a match",  "XXX",  "no match here"   # No match in any column
+    ~id , ~name         , ~code , ~description    ,
+      1 , NA            , "USA" , "First entry"   , # Should match on code
+      2 , "France"      , NA    , "Second entry"  , # Should match on name
+      3 , NA            , NA    , "United States" , # Should match on description
+      4 , "not a match" , "XXX" , "no match here" # No match in any column
   )
+  # nolint end
 
   # Mock the patterns for this test to ensure predictable matching
   mock_patterns <- tibble::tibble(
@@ -962,10 +1055,17 @@ test_that("match_entities_with_patterns performs multiple passes correctly", {
 
   # Should be a data frame with all target columns and requested output columns
   expect_s3_class(result, "data.frame")
-  expect_true(all(c(
-    "name", "code", "description",
-    "entity_id", "entity_name", "iso3c"
-  ) %in% names(result)))
+  expect_true(all(
+    c(
+      "name",
+      "code",
+      "description",
+      "entity_id",
+      "entity_name",
+      "iso3c"
+    ) %in%
+      names(result)
+  ))
 
   # Should have 4 rows (one for each unique combination of target columns)
   expect_equal(nrow(result), 4)
@@ -1016,9 +1116,10 @@ test_that("match_entities_with_patterns performs multiple passes correctly", {
 test_that("fill_mapping validates uniqueness of entity_id values", {
   # Create test data with an entity that won't match any pattern
   test_df <- tibble::tribble(
-    ~entity,      ~code,
-    "NotACountry", "USA"  # Using "USA" which already exists in entity_patterns
-  )
+    # nolint start
+    ~entity       , ~code ,
+    "NotACountry" , "USA" # Using "USA" which already exists in entity_patterns
+  ) # nolint end
 
   # Use local_mocked_bindings to mock list_entity_patterns
   local_mocked_bindings(
@@ -1039,7 +1140,7 @@ test_that("fill_mapping validates uniqueness of entity_id values", {
     result <- standardize_entity(
       test_df,
       entity,
-      fill_mapping = c(entity_id = "code")  # "code" contains "USA"
+      fill_mapping = c(entity_id = "code") # "code" contains "USA"
     ),
     "The entity_id value"
   )
@@ -1049,9 +1150,10 @@ test_that("fill_mapping validates uniqueness of entity_id values", {
 
   # But should work when filling with a different, non-conflicting ID
   test_df2 <- tibble::tribble(
-    ~entity,      ~code,
-    "NotACountry", "XYZ"  # XYZ doesn't exist in entity_patterns
-  )
+    # nolint start
+    ~entity       , ~code ,
+    "NotACountry" , "XYZ" # XYZ doesn't exist in entity_patterns
+  ) # nolint end
 
   # This should work fine
   result <- standardize_entity(
@@ -1067,7 +1169,7 @@ test_that("validate_entity_inputs catches invalid inputs", {
   # Test invalid data frame input
   expect_error(
     standardize_entity(
-      list(a = 1, b = 2),  # Not a data frame
+      list(a = 1, b = 2), # Not a data frame
       col1,
       output_cols = c("entity_id", "entity_name")
     ),
@@ -1076,14 +1178,15 @@ test_that("validate_entity_inputs catches invalid inputs", {
 
   # Test non-existent target columns
   test_df <- tibble::tribble(
-    ~existing_col,
+    # nolint start
+    ~existing_col   ,
     "United States"
-  )
+  ) # nolint end
 
   expect_error(
     standardize_entity(
       test_df,
-      non_existent_col,  # Column that doesn't exist
+      non_existent_col, # Column that doesn't exist
       output_cols = c("entity_id", "entity_name")
     ),
     "Target column\\(s\\) .* must be found in data"
@@ -1092,16 +1195,17 @@ test_that("validate_entity_inputs catches invalid inputs", {
 
 test_that("prefix validation works correctly", {
   test_df <- tibble::tribble(
-    ~country,
+    # nolint start
+    ~country        ,
     "United States"
-  )
+  ) # nolint end
 
   # Test invalid prefix types
   expect_error(
     standardize_entity(
       test_df,
       country,
-      prefix = c("prefix1", "prefix2")  # Multiple strings
+      prefix = c("prefix1", "prefix2") # Multiple strings
     ),
     "Prefix must be a single character string"
   )
@@ -1110,7 +1214,7 @@ test_that("prefix validation works correctly", {
     standardize_entity(
       test_df,
       country,
-      prefix = 123  # Number instead of string
+      prefix = 123 # Number instead of string
     ),
     "Prefix must be a single character string"
   )
@@ -1123,4 +1227,44 @@ test_that("prefix validation works correctly", {
       prefix = "test"
     )
   )
+})
+
+test_that("entity_id as target column gets replaced with standardized values", {
+  df <- data.frame(
+    entity_name = c("United States", "China", "NotACountry"),
+    entity_id = c("USA", "CHN", "ZZZ"),
+    obs_value = c(1, 2, 3)
+  )
+
+  expect_warning(
+    result <- standardize_entity(
+      data = df,
+      entity_id,
+      entity_name
+    )
+  )
+
+  # Check structure
+  expect_true(all(
+    c("entity_id", "entity_name", "entity_type", "obs_value") %in% names(result)
+  ))
+
+  # Should have correct number of rows (no duplication)
+  expect_equal(nrow(result), 3)
+
+  # USA and CHN should match and get standardized values
+
+  expect_equal(result$entity_id[1], "USA")
+  expect_equal(result$entity_id[2], "CHN")
+
+  # ZZZ should not match, so entity_id should be NA
+  expect_true(is.na(result$entity_id[3]))
+
+  # entity_name should be populated for matched rows
+  expect_equal(result$entity_name[1], "United States")
+  expect_equal(result$entity_name[2], "China")
+  expect_true(is.na(result$entity_name[3]))
+
+  # Original obs_value should be preserved
+  expect_equal(result$obs_value, c(1, 2, 3))
 })

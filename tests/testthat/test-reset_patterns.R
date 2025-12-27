@@ -20,9 +20,17 @@ test_that("reset_custom_entity_patterns clears custom patterns", {
   new_custom <- getOption("econid.custom_entity_patterns")
   expect_true(is.data.frame(new_custom))
   expect_equal(nrow(new_custom), 0)
-  expect_equal(names(new_custom), c(
-    "entity_id", "entity_name", "iso3c", "iso2c", "entity_type", "entity_regex"
-  ))
+  expect_equal(
+    names(new_custom),
+    c(
+      "entity_id",
+      "entity_name",
+      "iso3c",
+      "iso2c",
+      "entity_type",
+      "entity_regex"
+    )
+  )
 
   # Check that function returns NULL invisibly
   expect_invisible(reset_custom_entity_patterns())

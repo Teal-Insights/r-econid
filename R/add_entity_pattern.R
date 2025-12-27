@@ -67,7 +67,8 @@ add_entity_pattern <- function(
   if (entity_id %in% list_entity_patterns()$entity_id) {
     cli::cli_abort(
       paste(
-        "The entity_id", as.character(entity_id),
+        "The entity_id",
+        as.character(entity_id),
         "already exists in the custom patterns.",
         "Please use a unique identifier."
       )
@@ -87,10 +88,10 @@ add_entity_pattern <- function(
 
   # Create a new tibble row with the provided details
   new_pattern <- tibble::tibble(
-    entity_id   = as.character(entity_id),
+    entity_id = as.character(entity_id),
     entity_name = entity_name,
-    iso3c       = NA_character_,
-    iso2c       = NA_character_,
+    iso3c = NA_character_,
+    iso2c = NA_character_,
     entity_type = entity_type,
     entity_regex = entity_regex
   )

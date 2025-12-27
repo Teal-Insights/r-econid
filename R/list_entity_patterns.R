@@ -30,11 +30,11 @@ list_entity_patterns <- function() {
   # initialize it to empty tibble
   if (is.null(custom)) {
     custom <- tibble::tibble(
-      entity_id    = character(),
-      entity_name  = character(),
-      iso3c        = character(),
-      iso2c        = character(),
-      entity_type  = character(),
+      entity_id = character(),
+      entity_name = character(),
+      iso3c = character(),
+      iso2c = character(),
+      entity_type = character(),
       entity_regex = character()
     )
     options(econid.custom_entity_patterns = custom)

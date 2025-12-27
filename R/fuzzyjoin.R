@@ -6,9 +6,17 @@ globalVariables(c("i", "key", "value", "name", "newname"))
 
 #' @keywords internal
 #' @noRd
-fuzzy_join <- function(x, y, by = NULL, match_fun = NULL,
-                       multi_by = NULL, multi_match_fun = NULL,
-                       index_match_fun = NULL, mode = "inner", ...) {
+fuzzy_join <- function(
+  x,
+  y,
+  by = NULL,
+  match_fun = NULL,
+  multi_by = NULL,
+  multi_match_fun = NULL,
+  index_match_fun = NULL,
+  mode = "inner",
+  ...
+) {
   # preserve the grouping of x
   x_groups <- dplyr::groups(x)
   x <- dplyr::ungroup(x)
