@@ -434,35 +434,6 @@ validate_entity_inputs <- function(
   invisible(NULL)
 }
 
-#' Safe regex inner join that handles duplicate column names
-#'
-#' @description
-#' Wrapper around regex_inner_join that ensures no duplicate column names
-#' in the result by keeping only the first occurrence of each column name.
-#'
-#' @param x First data frame
-#' @param y Second data frame
-#' @param by Named character vector for join columns
-#' @param ignore_case Logical; whether to ignore case in regex matching
-#'
-#' @return A data frame with unique column names
-#'
-#' @keywords internal
-safe_regex_inner_join <- function(x, y, by, ignore_case = TRUE) {
-  # Perform the join
-  result <- regex_inner_join(x, y, by = by, ignore_case = ignore_case)
-
-  # Handle duplicate column names by keeping only the first occurrence
-  col_names <- names(result)
-  if (anyDuplicated(col_names)) {
-    # For each duplicate, keep only the first column
-    cols_to_keep <- !duplicated(col_names)
-    result <- result[, cols_to_keep, drop = FALSE]
-  }
-
-  result
-}
-
 #' Match entities with patterns using regex matching
 #'
 #' @description
@@ -556,8 +527,7 @@ match_entities_with_patterns <- function(
     }
 
     # Perform regex join on the current column for unmatched rows
-    # Use safe_regex_inner_join to handle potential duplicate column names
-    matched_pass <- safe_regex_inner_join(
+    matched_pass <- regex_inner_join(
       unmatched_entities,
       patterns,
       by = stats::setNames(entity_regex_col, col),
@@ -587,40 +557,6 @@ match_entities_with_patterns <- function(
     unmatched_entities
   ) |>
     dplyr::select(-".row_id")
-
-  # Rename temporary target columns back to original names ONLY if they don't
-  # conflict with pattern column names. If there's a conflict, keep the temp
-  # name so we preserve both the standardized value and the original target
-  # value.
-  for (orig_name in names(temp_name_map)) {
-    temp_name <- temp_name_map[[orig_name]]
-    if (orig_name != temp_name && temp_name %in% names(result)) {
-      # Only rename back if orig_name is NOT a pattern column name
-      if (!orig_name %in% pattern_col_names) {
-        names(result)[names(result) == temp_name] <- orig_name
-      }
-      # If orig_name IS a pattern column, keep the temp name to preserve both
-    }
-  }
-
-  # If no patterns columns exist in the result (which happens when all values
-  # in data are NA or no matches are found), add these columns with NA values
-  missing_cols <- setdiff(pattern_col_names, names(result))
-  if (length(missing_cols) > 0) {
-    na_patterns <- tibble::tibble(
-      !!!stats::setNames(
-        purrr::map(missing_cols, ~ rep(NA_character_, nrow(result))),
-        missing_cols
-      )
-    )
-    result <- dplyr::bind_cols(result, na_patterns)
-  }
-
-  # Only deduplicate if there are truly duplicate columns that we don't need
-  # (this shouldn't happen anymore with the fix above)
-  if (anyDuplicated(names(result))) {
-    result <- result[, !duplicated(names(result)), drop = FALSE]
-  }
 
   # Check for ambiguous matches (multiple matches for the same entity_id) and
   # warn that we will keep only the first match

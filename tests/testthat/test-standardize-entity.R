@@ -1236,11 +1236,12 @@ test_that("entity_id as target column gets replaced with standardized values", {
     obs_value = c(1, 2, 3)
   )
 
-  result <- standardize_entity(
-    data = df,
-    entity_id,
-    entity_name,
-    warn_overwrite = FALSE
+  expect_warning(
+    result <- standardize_entity(
+      data = df,
+      entity_id,
+      entity_name
+    )
   )
 
   # Check structure
