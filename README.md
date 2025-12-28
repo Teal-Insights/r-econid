@@ -18,7 +18,7 @@ coverage](https://codecov.io/gh/Teal-Insights/r-econid/graph/badge.svg)](https:/
 ## Overview
 
 The `econid` R package is a foundational building block of the
-[econdataverse](https://www.econdataverse.org/) family of packages aimed
+[EconDataverse](https://www.econdataverse.org/) family of packages aimed
 at helping economists and financial professionals work with
 sovereign-level economic data. The package is aimed at domain experts in
 economics and finance who need to analyze and join data across multiple
@@ -177,10 +177,12 @@ library(dplyr)
 df |>
   standardize_entity(entity, code) |>
   filter(!is.na(entity_id)) |>
-  mutate(entity_category = case_when(
-    entity_type == "economy" ~ "Country",
-    TRUE ~ "Other"
-  )) |>
+  mutate(
+    entity_category = case_when(
+      entity_type == "economy" ~ "Country",
+      TRUE ~ "Other"
+    )
+  ) |>
   select(entity_name, entity_category, obs_value)
 ```
 
@@ -193,7 +195,8 @@ You can also use the function directly without a pipeline:
 ``` r
 standardize_entity(
   data = df,
-  entity, code,
+  entity,
+  code,
   output_cols = c("entity_id", "entity_name", "entity_type"),
   fill_mapping = c(entity_name = "entity"),
   default_entity_type = NA_character_,
