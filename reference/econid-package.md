@@ -4,7 +4,7 @@ Provides utility functions for standardizing economic entity (economy,
 aggregate, institution, etc.) name and id in economic datasets such as
 those published by the International Monetary Fund and World Bank. Aims
 to facilitate consistent data analysis, reporting, and joining across
-datasets. Used as a foundational building block in the 'econdataverse'
+datasets. Used as a foundational building block in the 'EconDataverse'
 family of packages (<https://www.econdataverse.org>).
 
 ## See also

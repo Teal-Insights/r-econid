@@ -1,5 +1,7 @@
 # Changelog
 
+## econid (development version)
+
 ## econid 0.0.3
 
 CRAN release: 2026-01-08

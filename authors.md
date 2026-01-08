@@ -13,16 +13,16 @@
 ## Citation
 
 Source:
-[`DESCRIPTION`](https://github.com/Teal-Insights/r-econid/blob/v0.0.3/DESCRIPTION)
+[`DESCRIPTION`](https://github.com/Teal-Insights/r-econid/blob/main/DESCRIPTION)
 
 Christopher C. Smith (2026). *econid: Economic Entity Identifier
-Standardization*. R package version 0.0.3,
+Standardization*. R package version 0.0.3.9000,
 <https://teal-insights.github.io/r-econid/>.
 
     @Manual{,
       title = {econid: Economic Entity Identifier Standardization},
       author = {{Christopher C. Smith}},
       year = {2026},
-      note = {R package version 0.0.3},
+      note = {R package version 0.0.3.9000},
       url = {https://teal-insights.github.io/r-econid/},
     }
