@@ -1,5 +1,7 @@
 # econid (development version)
 
+# econid 0.0.3
+
 * `standardize_entity()` can now handle data frames with `entity_id` and `entity_name` columns
 
 # econid 0.0.2
