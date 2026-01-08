@@ -1,6 +1,8 @@
 # Changelog
 
-## econid (development version)
+## econid 0.0.3
+
+CRAN release: 2026-01-08
 
 - [`standardize_entity()`](https://teal-insights.github.io/r-econid/reference/standardize_entity.md)
   can now handle data frames with `entity_id` and `entity_name` columns

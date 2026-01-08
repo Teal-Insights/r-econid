@@ -16,8 +16,8 @@
 <script src="deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="Economic Entity Identifier Standardization">
-<meta name="description" content="Provides utility functions for standardizing economic entity (economy, aggregate, institution, etc.) name and id in economic datasets such as those published by the International Monetary Fund and World Bank. Aims to facilitate consistent data analysis, reporting, and joining across datasets. Used as a foundational building block in the econdataverse family of packages (&lt;https://www.econdataverse.org&gt;).">
-<meta property="og:description" content="Provides utility functions for standardizing economic entity (economy, aggregate, institution, etc.) name and id in economic datasets such as those published by the International Monetary Fund and World Bank. Aims to facilitate consistent data analysis, reporting, and joining across datasets. Used as a foundational building block in the econdataverse family of packages (&lt;https://www.econdataverse.org&gt;).">
+<meta name="description" content="Provides utility functions for standardizing economic entity (economy, aggregate, institution, etc.) name and id in economic datasets such as those published by the International Monetary Fund and World Bank. Aims to facilitate consistent data analysis, reporting, and joining across datasets. Used as a foundational building block in the EconDataverse family of packages (&lt;https://www.econdataverse.org&gt;).">
+<meta property="og:description" content="Provides utility functions for standardizing economic entity (economy, aggregate, institution, etc.) name and id in economic datasets such as those published by the International Monetary Fund and World Bank. Aims to facilitate consistent data analysis, reporting, and joining across datasets. Used as a foundational building block in the EconDataverse family of packages (&lt;https://www.econdataverse.org&gt;).">
 <meta property="og:image" content="https://teal-insights.github.io/r-econid/logo.png">
 </head>
 <body>
@@ -28,7 +28,7 @@
 
     <a class="navbar-brand me-2" href="index.html">econid</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.2.9001</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.3</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -63,7 +63,7 @@
 <div class="section level2">
 <h2 id="overview">Overview<a class="anchor" aria-label="anchor" href="#overview"></a>
 </h2>
-<p>The <code>econid</code> R package is a foundational building block of the <a href="https://www.econdataverse.org/" class="external-link">econdataverse</a> family of packages aimed at helping economists and financial professionals work with sovereign-level economic data. The package is aimed at domain experts in economics and finance who need to analyze and join data across multiple sources, but who aren’t necessarily R programming experts.</p>
+<p>The <code>econid</code> R package is a foundational building block of the <a href="https://www.econdataverse.org/" class="external-link">EconDataverse</a> family of packages aimed at helping economists and financial professionals work with sovereign-level economic data. The package is aimed at domain experts in economics and finance who need to analyze and join data across multiple sources, but who aren’t necessarily R programming experts.</p>
 </div>
 <div class="section level2">
 <h2 id="motivation">Motivation<a class="anchor" aria-label="anchor" href="#motivation"></a>
@@ -185,10 +185,12 @@ Workflow
 <span><span class="va">df</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="reference/standardize_entity.html">standardize_entity</a></span><span class="op">(</span><span class="va">entity</span>, <span class="va">code</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">entity_id</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>entity_category <span class="op">=</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/case_when.html" class="external-link">case_when</a></span><span class="op">(</span></span>
-<span>    <span class="va">entity_type</span> <span class="op">==</span> <span class="st">"economy"</span> <span class="op">~</span> <span class="st">"Country"</span>,</span>
-<span>    <span class="cn">TRUE</span> <span class="op">~</span> <span class="st">"Other"</span></span>
-<span>  <span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span></span>
+<span>    entity_category <span class="op">=</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/case_when.html" class="external-link">case_when</a></span><span class="op">(</span></span>
+<span>      <span class="va">entity_type</span> <span class="op">==</span> <span class="st">"economy"</span> <span class="op">~</span> <span class="st">"Country"</span>,</span>
+<span>      <span class="cn">TRUE</span> <span class="op">~</span> <span class="st">"Other"</span></span>
+<span>    <span class="op">)</span></span>
+<span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">entity_name</span>, <span class="va">entity_category</span>, <span class="va">obs_value</span><span class="op">)</span></span></code></pre></div>
 <div class="sourceCode" id="cb5"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="do">##     entity_name entity_category obs_value</span></span>
 <span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a><span class="do">## 1 United States         Country         1</span></span>
@@ -197,7 +199,8 @@ Workflow
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="reference/standardize_entity.html">standardize_entity</a></span><span class="op">(</span></span>
 <span>  data <span class="op">=</span> <span class="va">df</span>,</span>
-<span>  <span class="va">entity</span>, <span class="va">code</span>,</span>
+<span>  <span class="va">entity</span>,</span>
+<span>  <span class="va">code</span>,</span>
 <span>  output_cols <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"entity_id"</span>, <span class="st">"entity_name"</span>, <span class="st">"entity_type"</span><span class="op">)</span>,</span>
 <span>  fill_mapping <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>entity_name <span class="op">=</span> <span class="st">"entity"</span><span class="op">)</span>,</span>
 <span>  default_entity_type <span class="op">=</span> <span class="cn">NA_character_</span>,</span>
